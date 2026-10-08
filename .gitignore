@@ -1,0 +1,4 @@
+ref/
+film/out/
+node_modules/
+*.wav
