@@ -320,7 +320,7 @@ function tabular(str, x, y, fs, color, weight = 600, align = 'left', alpha = 1) 
   let xx = align === 'center' ? x - tot / 2 : align === 'right' ? x - tot : x; [...str].forEach((c, i) => { ctx.fillText(c, xx + ws[i] / 2, y); xx += ws[i]; });
   ctx.restore(); return tot;
 }
-function contactEnv(t) { const τ = t - cues.hit; return τ < 0 || τ > 0.8 ? 0 : Math.exp(-τ * 11) * Math.cos(2 * Math.PI * 2.6 * τ); }
+function contactEnv(t) { const τ = qT(t) - cues.hit; return τ < 0 || τ > 0.8 ? 0 : Math.exp(-τ * 11) * Math.cos(2 * Math.PI * 2.6 * τ); }
 function priceXf(kick, t) {   // price transform: bid kicks + the gavel's contact squash (pivot on the baseline)
   const c = contactEnv(t), sx = (1 + 0.03 * kick) * (1 + 0.08 * c), sy = (1 + 0.03 * kick) * (1 - 0.15 * c);
   ctx.translate(P0[0], PRICE_Y - 14 * kick + CAPH); ctx.scale(sx, sy); ctx.translate(0, -CAPH);
@@ -346,7 +346,7 @@ function drawScreen(t) {
   // label above the price: 起拍价 → 当前价 → 成交价
   const a1 = uiIn(t, 1);
   if (a1 > 0) { const lab = frozen ? '成交价' : j < 0 ? '起拍价' : '当前价';
-    text(lab, P0[0], PRICE_Y - CAPH - 64 + (1 - a1) * 20, { font: `${frozen ? 700 : 500} 30px ${SANS}`, color: frozen ? C.gold : C.paper, align: 'center', ls: 10, alpha: (frozen ? 0.95 : 0.6) * a1 * (1 - 0.6 * stampOn) }); }
+    text(lab, P0[0], PRICE_Y - CAPH - 64 + (1 - a1) * 20, { font: `${frozen ? 700 : 500} 30px ${SANS}`, color: frozen ? C.gold : C.paper, align: 'center', ls: 10, alpha: (frozen ? 0.95 : 0.6) * a1 * (1 - stampOn) }); }
   // the price odometer, drawn on its own layer and masked to a window with feathered top/bottom edges
   const kick = priceKick(t), dim = 1 - 0.62 * stampOn;
   const main = ctx; ctx = OCTX; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H); ctx.setTransform(main.getTransform()); ctx.globalAlpha = 1;
@@ -482,6 +482,7 @@ function drawSeal(t) {
   else { s = 1 - 0.06 * Math.exp(-τ * 12) * Math.cos(2 * Math.PI * 3 * τ); a = 1; rot = SEAL.rot; }
   let grow = 1, fade = 1; if (ir) { grow = ir.r / SEAL.R; fade = 1 - smooth(1.0, 1.8, grow); }
   ctx.save(); ctx.translate(SEAL.cx, SEAL.cy); ctx.rotate(rot); ctx.scale(s * grow, s * grow); ctx.globalAlpha = a * fade;
+  if (!ir) { ctx.save(); ctx.globalAlpha = a * 0.72; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(0, 0, SEAL.R - 6, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }   // ink backing: the dimmed digits never read through the seal
   ctx.drawImage(sealCanvas, -sealCanvas.width / 2, -sealCanvas.height / 2); ctx.restore();
 }
 
