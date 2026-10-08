@@ -1,0 +1,14 @@
+# R3 task list (形变动画 · 一锤定音)
+- [x] Clone ref, adapt harness/render.mjs (15 s, 450 f, ≤20 Mb/s), install deps
+- [x] Treatment + cue sheet (cues.json, shared by picture & sound)
+- [x] Morph engine (arc-length resample, first-vertex alignment, via-circle, squash/stretch, rotation, sub-parts, holes)
+- [x] Shapes: logo gavel (vector rebuild), factory, apartment, jade bracelet, capsule, digit glyphs (opentype outlines)
+- [x] Hook (gavel tap → grey circle inflates red), morph chain with 起拍价 tag, colour-field wipes
+- [x] Auction screen: rolling odometer, paddles → digits, counters, 溢价 tag
+- [x] Hit: silence, gavel rise/hold/slam, shake, 成交 seal, gold burst
+- [x] Proof: seal iris → 3 figures (circle → digit morph count-up)
+- [x] End frame: converge → logo, title, slogan, micro-motion
+- [x] Key stills review; 480p preview (every 3rd frame)
+- [x] Sound (mgaudio), master −14 LUFS / ≤ −1 dBTP
+- [x] R1 full render + spec check + report + commit/push
+- [ ] Independent review #1 → R2 fixes → full render → review #2 → commit/push

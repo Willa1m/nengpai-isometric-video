@@ -2,3 +2,5 @@ ref/
 film/out/
 node_modules/
 *.wav
+r3-morph/film/out/
+r3-morph/node_modules/
