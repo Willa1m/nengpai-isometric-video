@@ -307,7 +307,7 @@ function bidsCountAt(t) { const j = bidIndex(t); const base = 386, steps = BIDS.
 const fmt = (n) => n.toLocaleString('en-US');
 function tabular(str, x, y, fs, color, weight = 600, align = 'left', alpha = 1) {   // fixed cells → no jitter
   ctx.save(); ctx.font = `${weight} ${fs}px ${LAT}`; ctx.fillStyle = color; ctx.globalAlpha *= alpha; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  const cw = fs * 0.64, nw = fs * 0.3; const ws = [...str].map((c) => (/[0-9]/.test(c) ? cw : nw)); const tot = ws.reduce((a, b) => a + b, 0);
+  const cw = fs * 0.64, nw = fs * 0.3; const ws = [...str].map((c) => (/[0-9]/.test(c) ? cw : c === '+' ? fs * 0.62 : nw)); const tot = ws.reduce((a, b) => a + b, 0);
   let xx = align === 'center' ? x - tot / 2 : align === 'right' ? x - tot : x; [...str].forEach((c, i) => { ctx.fillText(c, xx + ws[i] / 2, y); xx += ws[i]; });
   ctx.restore(); return tot;
 }
@@ -342,10 +342,11 @@ function drawScreen(t) {
   const main = ctx; ctx = OCTX; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H); ctx.setTransform(main.getTransform()); ctx.globalAlpha = 1;
   ctx.save(); ctx.translate(P0[0], PRICE_Y - 14 * kick); ctx.scale(1 + 0.03 * kick + hitSq * 0.5, 1 + 0.03 * kick - hitSq);
   const colsIn = (i) => EO(clamp((t - (cues.wipes.screen + 0.12 + 0.035 * i)) / 0.32));
+  const statics = [];
   PL.slots.forEach((s, i) => {
     const ai = colsIn(i); if (ai <= 0) return; const dy = (1 - ai) * 90;
     ctx.save(); ctx.globalAlpha = ai;
-    if (s.t !== 'd') { glyph(s.t, s.cx, dy + (s.t === ',' ? 0 : 0), FS, C.rise); ctx.restore(); return; }
+    if (s.t !== 'd') { statics.push([s, dy, ai]); ctx.restore(); return; }
     const k = s.k, p = colPos(k, tt), v = (colPos(k, tt + 0.004, true) - colPos(k, tt - 0.004, true)) / 0.008;
     const i0 = Math.floor(p + 1e-6), f = p - i0, blur = Math.min(90, Math.abs(v) * PITCH * SHUT);
     // paddle-delivered column: the old digit squashes away just before the paddle lands
@@ -370,6 +371,9 @@ function drawScreen(t) {
   }
   ctx.restore();
   ctx = main; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(OCV, 0, 0); ctx.restore();
+  ctx.save(); ctx.translate(P0[0], PRICE_Y - 14 * kick); ctx.scale(1 + 0.03 * kick + hitSq * 0.5, 1 + 0.03 * kick - hitSq);
+  for (const [s, dy, ai] of statics) glyph(s.t, s.cx, dy, FS, C.rise, 1, 1, ai);
+  ctx.restore();
   // ▲ + premium tag
   const j = frozen ? BIDS.length - 1 : bidIndex(t);
   const a3 = uiIn(t, 3);
@@ -444,8 +448,9 @@ function drawBurst(t) {
     const len = (160 + 220 * r()), r0 = 120 + 520 * EO(clamp(τ / 0.45)) * (0.7 + 0.3 * r()), r1 = r0 + len * (1 - EO(clamp(τ / 0.5)));
     if (r1 - r0 < 2) continue; ctx.lineWidth = 7 * (1 - τ / 0.6) + 1; ctx.beginPath(); ctx.moveTo(o[0] + Math.cos(a) * r0, o[1] + Math.sin(a) * r0); ctx.lineTo(o[0] + Math.cos(a) * r1, o[1] + Math.sin(a) * r1); ctx.stroke(); }
   for (let i = 0; i < 14; i++) { const r = rng(i * 23 + 9), a = (-170 + 160 * r()) * deg, v = 900 + 700 * r();
-    const x = o[0] + Math.cos(a) * v * τ, y = o[1] + Math.sin(a) * v * τ + 1400 * τ * τ; ctx.fillStyle = C.gold; ctx.globalAlpha = 1 - τ / 0.6;
-    ctx.beginPath(); ctx.arc(x, y, 7 + 6 * r(), 0, 2 * Math.PI); ctx.fill(); }
+    const P = (tt) => [o[0] + Math.cos(a) * v * tt, o[1] + Math.sin(a) * v * tt + 1400 * tt * tt], pa = P(Math.max(0, τ - SHUT / 2)), pb = P(τ + SHUT / 2), rr = 6 + 5 * r();
+    ctx.strokeStyle = C.gold; ctx.globalAlpha = (1 - τ / 0.6) * Math.min(1, 2.2 * rr / (Math.hypot(pb[0] - pa[0], pb[1] - pa[1]) + 2 * rr)); ctx.lineWidth = 2 * rr;
+    ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke(); }
   ctx.restore();
   if (τ < 3 * FR) { ctx.save(); const g = ctx.createRadialGradient(o[0], o[1], 0, o[0], o[1], 900); const a = 0.55 * (1 - τ / (3 * FR));
     g.addColorStop(0, rgba('#FFF1C8', a)); g.addColorStop(0.35, rgba('#FFD46A', a * 0.35)); g.addColorStop(1, rgba('#FFD46A', 0)); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore(); }
