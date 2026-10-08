@@ -4,3 +4,4 @@ node_modules/
 *.wav
 r3-morph/film/out/
 r3-morph/node_modules/
+r3-morph/preview.mp4
