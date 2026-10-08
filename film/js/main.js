@@ -695,6 +695,9 @@ const streams = [];
   for (const [k, p1] of Object.entries(streamTargets)) {
     const p0 = COURT_TOP.clone();
     const mid = p0.clone().lerp(p1, 0.5); mid.y = Math.max(p0.y, p1.y) + 1.15;
+    // r2: tower and jade arcs swing out to screen-right so they never run down the tower facade or the pediment
+    if (k === 'tower') mid.set(1.6, 6.3, -4.2);
+    if (k === 'jade') mid.set(4.2, 3.4, -0.6);
     const curve = new THREE.QuadraticBezierCurve3(p0, mid, p1);
     const SEG = 80, RAD = 6;
     const geo = new THREE.TubeGeometry(curve, SEG, 0.028, RAD, false);
@@ -1105,11 +1108,12 @@ function addPar(obj, px, py, yW, tAuth, m, drift) {
   const d2 = makeDoc(0.85); fg.add(d2); addPar(d2, 1800, 700, 3, 6.6, 1.25, [0, 0]); d2.userData.spin = [0.3, -0.5, 0.4, 1];
   const d3 = makeDoc(0.9); fg.add(d3); addPar(d3, 120, 420, 4, 3.6, 1.25, [0, 0]); d3.userData.spin = [-0.4, 0.4, 0.3, 2];
   const d4 = makeDoc(0.6); bgG.add(d4); addPar(d4, 1480, 140, -2, 9.4, 0.75, [0, 0]); d4.userData.spin = [0.5, 0.2, -0.3, 3];
-  const d5 = makeDoc(0.55); bgG.add(d5); addPar(d5, 820, 120, -2, 6.6, 0.75, [0, 0]); d5.userData.spin = [-0.3, 0.6, 0.2, 4];
+  const d5 = makeDoc(0.55); bgG.add(d5); addPar(d5, 620, 110, -2, 9.4, 0.75, [0, 0]); d5.userData.spin = [-0.3, 0.6, 0.2, 4];
   const d6 = makeDoc(0.5); bgG.add(d6); addPar(d6, 690, 980, -3, 9.4, 0.75, [0, 0]); d6.userData.spin = [0.2, -0.4, 0.5, 5];
   // bg coins (gold discs)
   const coinM = std(PAL.gold, { metal: 0.55, rough: 0.3 });
-  [[1880, 470, 9.4], [940, 1010, 6.6], [60, 640, 3.6]].forEach(([px, py, ta], n) => {
+  [[1880, 460, 9.4], [1015, 975, 9.4], [870, 120, 9.4]].forEach(   // r2: all coins authored in the end frame, clear of the title
+  ([px, py, ta], n) => {
     const c = mesh(cyl(0.3, 0.3, 0.06, 40), coinM, false); bgG.add(c); addPar(c, px, py, -2, ta, 0.75, [0, 0]); c.userData.spin = [0.7, 0.4, 0.3, 6 + n];
   });
 }
