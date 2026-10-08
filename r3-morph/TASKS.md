@@ -11,4 +11,4 @@
 - [x] Key stills review; 480p preview (every 3rd frame)
 - [x] Sound (mgaudio), master −14 LUFS / ≤ −1 dBTP
 - [x] R1 full render + spec check + report + commit/push
-- [ ] Independent review #1 → R2 fixes → full render → review #2 → commit/push
+- [x] Independent review #1 → R2 fixes → full render (+ hit-window GOP re-render) → review #2 → commit/push

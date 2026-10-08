@@ -106,3 +106,58 @@ R1 is kept as `versions/r1/` (video, cover and source).
     - The lockup is centred on the frame axis. The gap from the lockup to the slogan is about 110 px.
     - Shine sweep at 14.3. The end chord fades over the last 0.9 s.
 11. Encode capped at 18 Mb/s. Motion blur is 8 sub-samples (was 4). The seeded RNG is hashed, so the confetti no longer lines up in a column.
+12. After the R2 full render I found two defects in my own frame check, both in the hero window: the contact squash ghosted frame 300 (it varied inside the shutter), and the dimmed gold 「成交价」 label showed through the seal and garbled 「一锤定音」. I re-rendered **only the GOP 6.333–11.267 s** (148 frames) with the fixes (frame-centre contact squash, label hidden under the seal, a 72 % ink backing disc behind the seal). I encoded it with identical x264 settings and stream-copy spliced it at the existing IDR frames, so the rest of the film is bit-identical to the R2 render. This replaced a second full render.
+
+## Round 2 — check numbers (final `video.mp4`)
+| check | measured |
+|---|---|
+| Duration / frames | 15.000 s, 450 frames, splice points continuous (timestamps checked frame by frame) |
+| Video | 1920×1080, 30 fps, H.264 High, 19.89 Mb/s (container 20.23 Mb/s incl. 320 kb/s AAC), 37.9 MB |
+| Audio | AAC-LC stereo 48 kHz |
+| Loudness | −14.1 LUFS integrated, LRA 2.9 LU |
+| True peak | −1.7 dBTP |
+| Silence | 9.799–9.995 s, exactly the 6 frames before the hit (true digital zero) |
+| Black frames | 0 |
+| Fonts | every CJK glyph resolves (`document.fonts.check`) |
+
+## Independent review #2 (a new sub-agent, same prompt, on the R2 film)
+| | style_fidelity | concept_wow | motion_craft | design_typography | finish_texture | sound_sync | technical |
+|---|---|---|---|---|---|---|---|
+| **Review 1 (R1)** | 6 | 6 | 5 | 6 | 6 | 6 | 7 |
+| **Review 2 (R2)** | 6 | 6 | 5 | 6 | 6 | 6 | 7 |
+
+**Priority answers (review 2):** concept_wow is still **6, not ≥ 7**, and 成交 still does **not** read as one climax. The scores did not move.
+
+The reviewer's main points, as I read them against my own frames:
+- **The hit is read as three events.** Strike (f300), gavel lift-off (f306–308, read as "a second swing"), then the seal (f309). My choice to land the last bid *on* the impact frame backfired: for ~5 frames the price still reads ¥2,120,000 while the pill already says +118 %, and it then rolls. That is a real logic error, and the brief says "the price freezes".
+- **The seal is red-on-maroon** and hides the final price when it lands.
+- **The odometer blur still reads as a box smear** at the fastest rolls.
+- **Notches during circle ↔ factory / apartment.** The radial correspondence I introduced folds on the non-star-shaped saw-tooth and stepped crown.
+- **The proof row reads as a stock three-up KPI row**, and its count steps look like ~8 fps.
+- **The end gather is weak dot drift.**
+- **The mix is still compressed** (LRA 2.9 LU) and the end chord is bass-heavy on a phone.
+- **The bitrate sits at the ceiling.**
+- **I disagree on one point:** the reviewer says the stamp has no sound. There is a seal + thud layer whose onset measures at 10.283 s, but it is masked by the hit's boom tail, so in practice it is inaudible.
+
+## Honest self-critique (final)
+**Concept (two sentences):** One red circle — the client's own logo — is tapped awake by its gavel and morphs through the assets a judicial auction sells, flattens into a live-auction screen whose red odometer climbs, and is struck 成交. The seal's ring opens onto the proof figures, which collapse back into the circle as the gavel lands: the logo.
+
+**Strongest:** the idea is fully carried by shapes. Logo → asset chain → capsule → screen → seal ring → iris → logo, with the bracelet rhyme and the gavel pulled out of the logo. The engine itself is sound: equal arc-length resampling, first-vertex alignment, a held via-circle, sub-part and shade continuity. Spec compliance holds: 15.000 s, −14 LUFS, −1.7 dBTP, 6 silent frames.
+
+**Top-3 weaknesses (agreeing with both juries):**
+1. **The 成交 climax is still not one decisive event.** The fix is clear: price and +118 % reach the final value *before* the swing and freeze with zero blur. Strike and seal land on the same frame (or the seal exactly one 8th later with its own audible thock), and the gavel stays put instead of lifting out. Put the seal on a paper-coloured punch-out so it reads red-on-paper, offset so ¥2,180,000 stays readable.
+2. **Motion craft scores 5 in both reviews.**
+   - Morph halves are tight and holds are long ("shape, pause, shape").
+   - The radial correspondence folds on concave outlines; per-shape star-centre selection or flubber-style segment matching would fix it.
+   - Odometer smear at the fastest rolls.
+   - The proof count steps too coarsely.
+3. **Mix dynamics.** LRA ≈ 3 LU, the hit is only ~4–5 dB over the bid bed, and the end chord has little mid-range for phone speakers.
+
+**What I would do with more time:**
+- Rebuild the climax as described in weakness 1.
+- Lengthen morph halves to 10–12 frames, shorten the holds, and add S-arc travel across frame.
+- Continuous rolling count-ups in the proof.
+- Gather the figures into a centre circle that then slides left as the wordmark wipes in.
+- Re-voice the end chord in the 200 Hz–2 kHz band and leave real headroom before the hit.
+
+**Final self-score:** style 6.5 · concept 6.5 · motion 5.5 · design 6.5 · finish 6.5 · sound 6 · technical 7.5. This is above both juries in five of seven dimensions, by 0.5 each. By their reading the film is still not at the 8–9 target; a third round would be needed.
