@@ -3,25 +3,24 @@
  "duration": 10.0,
  "bpm": 120,
  "key": "D",
- "note": "One cue sheet for picture (js/main.js) and sound (audio.py). Musical grid: 120 bpm, beat 0.5 s, bars start at 1.8, 3.8, 5.8, 7.8 (drop = deal).",
+ "note": "One cue sheet for picture (js/main.js) and sound (audio.py). 120 bpm, beat 0.5 s; bar lines 1.8 / 3.8 / 5.8 / 7.8; strike 0.30 and final 8.30 on beats. Round 2 retime.",
  "strike": 0.3,
- "tiles_t0": 0.56,
- "tiles_dt": 0.125,
+ "tiles_t0": 0.7,
+ "tiles_dt": 0.12,
  "tile_clicks": [
-  0.56,
-  0.685,
-  0.81,
-  0.935,
+  0.7,
+  0.82,
+  0.94,
   1.06,
-  1.185,
-  1.31,
-  1.435
+  1.18,
+  1.3,
+  1.42
  ],
- "base_rise": 1.5,
+ "base_rise": 1.52,
  "dormant": {
-  "tower": 1.16,
-  "factory": 1.26,
-  "machines": 1.34,
+  "tower": 1.22,
+  "factory": 1.3,
+  "machines": 1.38,
   "jade": 1.46
  },
  "court": {
@@ -32,13 +31,13 @@
   "roof": 2.22,
   "emblem": 2.3
  },
- "flood_t0": 2.3,
+ "flood_t0": 2.06,
  "flood_dt": 0.15,
  "streams": {
-  "factory": 2.55,
-  "machines": 2.8,
-  "tower": 3.05,
-  "jade": 3.3
+  "factory": 2.3,
+  "machines": 2.55,
+  "tower": 2.8,
+  "jade": 3.05
  },
  "stream_travel": 0.3,
  "trucks": 3.3,
@@ -55,23 +54,27 @@
  ],
  "deal": 5.8,
  "figures": [
-  6.05,
-  6.3,
-  6.55
+  5.95,
+  6.15,
+  6.35
  ],
- "count_dur": 0.62,
- "fig_out": 7.62,
+ "count_dur": 0.5,
+ "fig_out": 7.55,
  "pullback": [
-  7.8,
-  8.8
+  7.6,
+  8.45
  ],
- "whoosh": 8.25,
+ "whoosh": 8.0,
  "title": {
-  "logo": 8.42,
-  "name": 8.55,
-  "rule": 8.7,
-  "slogan": 8.8,
-  "small": 8.95
+  "logo": 8.0,
+  "name": 8.1,
+  "rule": 8.22,
+  "slogan": 8.3,
+  "small": 8.4
  },
- "final": 8.8
+ "final": 8.3,
+ "gavel2": [
+  5.62,
+  5.8
+ ]
 }

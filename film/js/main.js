@@ -63,17 +63,25 @@ function hermite(keys, t) {
 }
 const PB0 = cues.pullback[0], PB1 = cues.pullback[1];
 const CAM = {
-  x: [[0, 0.35], [0.55, 0.3, 'e'], [1.75, 0.0], [2.5, -0.9, 'e'], [4.6, 1.1], [5.55, 1.75, 'e'], [6.4, 4.4], [PB0, 5.05, 'e'], [PB1, -5.55, 'e'], [10, -5.65]],
-  y: [[0, 1.05], [0.55, 0.8, 'e'], [1.75, 0.6], [2.5, 1.0, 'e'], [4.6, 1.45], [5.55, 1.75, 'e'], [6.4, 1.0], [PB0, 1.05, 'e'], [PB1, 0.62, 'e'], [10, 0.64]],
-  z: [[0, 3.1], [0.55, 2.55, 'e'], [1.75, 1.55], [2.5, 1.85, 'e'], [4.6, 1.78], [5.55, 1.85, 'e'], [6.4, 1.36], [PB0, 1.33, 'e'], [PB1, 1.12, 'e'], [10, 1.125]],
+  x: [[0, 0.35], [0.55, 0.3, 'e'], [1.75, 0.0], [2.5, -0.9, 'e'], [4.6, 1.0], [5.45, 2.7, 'e'], [5.95, 2.8, 'e'], [6.55, -3.96], [PB0, -4.3, 'e'], [PB1, -5.55, 'e'], [10, -5.65]],
+  y: [[0, 1.05], [0.55, 0.8, 'e'], [1.75, 0.65], [2.5, 2.2, 'e'], [4.6, 2.3], [5.45, 3.0, 'e'], [5.95, 2.95, 'e'], [6.55, 0.85], [PB0, 0.8, 'e'], [PB1, 0.62, 'e'], [10, 0.64]],
+  z: [[0, 3.1], [0.55, 2.55, 'e'], [1.75, 1.55], [2.5, 1.55, 'e'], [4.6, 1.52], [5.45, 1.9, 'e'], [5.95, 1.86, 'e'], [6.55, 1.22], [PB0, 1.21, 'e'], [PB1, 1.12, 'e'], [10, 1.125]],
 };
+// camera shake on the two gavel hits: 6 px (strike) / 4 px (deal), alternating, decaying to 0 over 6 frames
+function shake(t, t0, px) {
+  const f = (t - t0) * 30; if (f < 0 || f >= 6) return [0, 0];
+  const a = px * (1 - f / 6);
+  return [a * Math.cos(Math.PI * f), 0.6 * a * Math.sin(Math.PI * f * 1.3 + 0.7)];
+}
 function camAt(t) {
   let zoom = hermite(CAM.z, t);
   const u = t - cues.strike;                                    // strike: 4 % punch-in in 2 frames, settles over 10
   if (u > 0) zoom *= 1 + 0.04 * (u < 0.066 ? A.easeOutCubic(u / 0.066) : 1 - A.easeOutCubic((u - 0.066) / 0.33));
-  const v = t - cues.deal;                                      // deal: 2.5 % punch
-  if (v > 0) zoom *= 1 + 0.025 * (v < 0.066 ? A.easeOutCubic(v / 0.066) : 1 - A.easeOutCubic((v - 0.066) / 0.4));
-  return { x: hermite(CAM.x, t), y: hermite(CAM.y, t), zoom };
+  const v = t - cues.deal;                                      // deal: 4 % punch, ease-out-expo over 8 frames
+  if (v > 0) zoom *= 1 + 0.04 * (v < 0.05 ? A.easeOutCubic(v / 0.05) : 1 - A.easeOutExpo((v - 0.05) / 0.27));
+  const s1 = shake(t, cues.strike, 6), s2 = shake(t, cues.deal, 4);
+  const k = 1 / (60 * zoom);
+  return { x: hermite(CAM.x, t) + (s1[0] + s2[0]) * k, y: hermite(CAM.y, t) + (s1[1] + s2[1]) * k, zoom };
 }
 // world point at a given output-frame pixel for a layer with parallax factor m (island 1, fg 1.25, bg 0.75)
 function worldAt(px, py, yW, t, m = 1) {
@@ -163,10 +171,12 @@ const tileCols = tiles.map((tl) => {
 function tileState(tl, t) {
   const land = tileLand(tl.d);
   const ax = A.hash(tl.i * 7.1 + tl.j * 3.3) > 0.5 ? 1 : -1;
-  const dr = A.drop(t - land, 0.24, 2.2, 1.9 * ax, 0.06);
+  const dr = A.drop(t - land, 0.2, 1.4, 1.6 * ax, 0.06);
   const tf = floodAt(tl.d);
   const bump = t > tf ? 0.07 * Math.sin(Math.PI * A.clamp((t - tf) / 0.22)) : 0;
-  return { y: (tl.d === 0 ? 0 : dr.y) + bump, rot: tl.d === 0 ? 0 : dr.rot, sy: tl.d === 0 ? 1 : dr.sy, sxz: tl.d === 0 ? 1 : dr.sxz, vis: tl.d === 0 ? 1 : dr.vis, ax };
+  const fS = (t - cues.strike) * 30;
+  const sq0 = fS < 0 ? 1 : fS < 2 ? 0.85 : 1 + 0.03 * Math.exp(-(fS - 2) / 2.5) * Math.cos((fS - 2) * 1.3);
+  return { y: (tl.d === 0 ? 0 : dr.y) + bump, rot: tl.d === 0 ? 0 : dr.rot, sy: tl.d === 0 ? sq0 : dr.sy, sxz: tl.d === 0 ? 1 : dr.sxz, vis: tl.d === 0 ? 1 : dr.vis, ax };
 }
 const isWater = (tl) => tl.type === 'w';
 on((t) => {
@@ -328,9 +338,12 @@ late((t) => {
     _m.compose(_v, _q, _s); winMesh.setMatrixAt(n, _m);
     const tl = b.tRev + 0.12 + wd.r * 0.055 + wd.seed * 0.22;
     let k = wd.lit ? A.smooth(A.inv(tl, tl + 0.05, t)) : 0;
-    if (wd.lit && t > 8.8 && A.hash(wd.seed * 91 + Math.floor(t * 2.5)) > 0.93) k *= 0.25;   // a few windows blink in the hold
+    if (wd.lit && t > 8.5 && A.hash(wd.seed * 91 + Math.floor(t * 2.5)) > 0.93) k *= 0.25;   // a few windows blink in the hold
     if (b.tRev > 50) k = 0;
-    _c.copy(cWinD).lerp(cWinDark, A.smooth(A.inv(b.tRev, b.tRev + 0.2, t))).lerp(cWinLit, k);
+    const dd = Math.hypot(b.x, b.z), tw = cues.deal + 0.03 + dd * 0.035;   // radial flash sweep from the courthouse, 8 frames
+    const wf = t > tw ? Math.exp(-(t - tw) / 0.12) : 0;
+    _c.copy(cWinD).lerp(cWinDark, A.smooth(A.inv(b.tRev, b.tRev + 0.2, t))).lerp(cWinLit, Math.max(k, wf));
+    if (wf > 0.02) _c.lerp(_c2.set('#FFF6D8'), 0.6 * wf).multiplyScalar(1 + 0.8 * wf);
     winMesh.setColorAt(n, _c);
     n++;
   }
@@ -414,6 +427,8 @@ function makeBuilding(o) {
     b.state = st;
     root.visible = st.vis;
     root.position.y = TILE_H + st.y;
+    const pop = dormant && t > b.tRev ? 1 + 0.08 * Math.sin(Math.PI * A.clamp((t - b.tRev) / 0.2)) : 1;   // 6-frame pop when its stream connects
+    root.scale.setScalar(pop);
     walls.scale.set(st.sxz, Math.max(1e-4, st.sy), st.sxz);
     cap.position.y = o.h * st.sy + st.capY;
     const cs = Math.max(1e-4, st.cap);
@@ -447,21 +462,46 @@ const factory = makeBuilding({
     for (const y of [1.2, 1.7]) { const bnd = mesh(cyl(0.175, 0.178, 0.16, 24), M(PAL.dormDark, PAL.red)); bnd.position.y = y; ch.add(bnd); }
   },
 });
-// stack of machines (right): three machine blocks, a gear, crates
+// machines (right): a lathe, a C-frame press and a clean 12-tooth gear on a workshop plinth
+function gearGeo(R, r0, teeth, th) {
+  const sh = new THREE.Shape();
+  for (let k = 0; k < teeth * 4; k++) {
+    const a = (k / (teeth * 4)) * Math.PI * 2, rr = (k % 4 === 1 || k % 4 === 2) ? R : R * 0.8;
+    const x = Math.cos(a) * rr, y = Math.sin(a) * rr; k ? sh.lineTo(x, y) : sh.moveTo(x, y);
+  }
+  sh.closePath();
+  const hole = new THREE.Path(); hole.absarc(0, 0, r0, 0, Math.PI * 2, true); sh.holes.push(hole);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 2, curveSegments: 16 });
+  g.translate(0, 0, -th / 2); return g;
+}
 const machines = makeBuilding({
-  mode: 'dormant', x: 3.5, z: -3.5, w: 1.5, d: 1.2, h: 0.55, wall: PAL.ivory2, band: PAL.gold, tLand: D.machines, tRev: revAt('machines'),
-  roof: { type: 'flat', col: PAL.ink }, win: false,
+  mode: 'dormant', x: 3.5, z: -3.5, w: 1.6, d: 1.5, h: 0.22, wall: PAL.ivory2, band: PAL.gold, tLand: D.machines, tRev: revAt('machines'),
+  roof: { type: 'flat', col: PAL.ivory }, win: false,
   extra: (cap, walls, M) => {
-    const m2 = mesh(rbox(1.1, 0.5, 0.9, 0.05), M(PAL.dormMid, PAL.red)); m2.position.set(-0.1, 0.08, 0.05); cap.add(m2);
-    const m3 = mesh(rbox(0.7, 0.38, 0.6, 0.05), M(PAL.dorm, PAL.peach)); m3.position.set(-0.15, 0.58, 0.05); cap.add(m3);
-    const sc = mesh(box(0.02, 0.18, 0.4), M(PAL.dormWin, PAL.gold, 0.2)); sc.position.set(0.41, 0.2, 0.05); cap.add(sc);
-    const gear = new THREE.Group(); gear.position.set(0.25, 0.85, 0.05); cap.add(gear);
-    const gm = M(PAL.dormDark, PAL.gold, 0.1, { metal: 0.5, rough: 0.35 });
-    const disc = mesh(cyl(0.3, 0.3, 0.1, 36), gm); disc.rotation.z = Math.PI / 2; disc.position.x = -0.05; gear.add(disc);
-    for (let k = 0; k < 10; k++) { const tooth = mesh(box(0.1, 0.1, 0.1), gm); const a = k / 10 * Math.PI * 2; tooth.position.set(0, Math.cos(a) * 0.33 - 0.05, Math.sin(a) * 0.33); tooth.rotation.x = -a; gear.add(tooth); }
-    const hub = mesh(cyl(0.08, 0.08, 0.14, 20), M(PAL.dormMid, PAL.red)); hub.rotation.z = Math.PI / 2; hub.position.x = -0.07; gear.add(hub);
-    on((t) => { gear.rotation.x = -Math.max(0, t - revAt('machines')) * 2.4 * A.smooth(A.inv(revAt('machines'), revAt('machines') + 0.6, t)); });
-    const cr = mesh(rbox(0.32, 0.32, 0.32, 0.03), M(PAL.dorm, PAL.ivory)); cr.position.set(0.62, 0, 0.5); walls.add(cr);
+    const R = revAt('machines');
+    // lathe along X (front-left)
+    const bed = mesh(rbox(1.15, 0.16, 0.34, 0.03), M(PAL.dormMid, PAL.red)); bed.position.set(0.0, 0.08, 0.38); cap.add(bed);
+    const legs = mesh(rbox(1.0, 0.08, 0.28, 0.02), M(PAL.dormDark, PAL.redDeep)); legs.position.set(0.0, 0.06, 0.38); cap.add(legs);
+    const head = mesh(rbox(0.3, 0.32, 0.34, 0.04), M(PAL.dorm, PAL.ivory)); head.position.set(-0.4, 0.24, 0.38); cap.add(head);
+    const tail = mesh(rbox(0.16, 0.2, 0.24, 0.03), M(PAL.dorm, PAL.ivory)); tail.position.set(0.45, 0.24, 0.38); cap.add(tail);
+    const chuck = new THREE.Group(); chuck.position.set(-0.2, 0.42, 0.38); cap.add(chuck);
+    const ch = mesh(cyl(0.12, 0.12, 0.1, 28), M(PAL.dormDark, PAL.gold)); ch.rotation.z = -Math.PI / 2; chuck.add(ch);
+    const bar = mesh(cyl(0.035, 0.035, 0.55, 14), M(PAL.dormMid, PAL.ivory3)); bar.rotation.z = -Math.PI / 2; bar.position.x = 0.1; chuck.add(bar);
+    // press (back-right): column + arm + moving ram
+    const col = mesh(rbox(0.26, 0.86, 0.3, 0.03), M(PAL.dormMid, PAL.peach)); col.position.set(0.48, 0.08, -0.32); cap.add(col);
+    const arm = mesh(rbox(0.56, 0.18, 0.3, 0.03), M(PAL.dormMid, PAL.peach)); arm.position.set(0.28, 0.76, -0.32); cap.add(arm);
+    const anvil = mesh(rbox(0.36, 0.12, 0.3, 0.02), M(PAL.dormDark, PAL.ink)); anvil.position.set(0.16, 0.08, -0.32); cap.add(anvil);
+    const ram = mesh(cyl(0.07, 0.07, 0.3, 18), M(PAL.dormDark, PAL.gold)); ram.position.set(0.14, 0.45, -0.32); cap.add(ram);
+    // gear (left face), clean extruded teeth
+    const gear = mesh(gearGeo(0.3, 0.07, 12, 0.07), M(PAL.dormDark, PAL.gold)); gear.position.set(-0.45, 0.42, -0.2); cap.add(gear);
+    const gear2 = mesh(gearGeo(0.18, 0.05, 9, 0.07), M(PAL.dormDark, PAL.red)); gear2.position.set(-0.45 + 0.42, 0.42 + 0.2, -0.2); cap.add(gear2);
+    on((t) => {
+      const k = A.smooth(A.inv(R, R + 0.5, t)), w = Math.max(0, t - R);
+      gear.rotation.z = -w * 2.2 * k; gear2.rotation.z = w * 2.2 * (0.3 / 0.18) * k + 0.17;
+      chuck.rotation.x = w * 9 * k;
+      ram.position.y = 0.45 - 0.17 * k * Math.pow(Math.max(0, Math.sin(w * 5.5)), 4);
+    });
+    const cr = mesh(rbox(0.3, 0.3, 0.3, 0.03), M(PAL.dorm, PAL.ivory)); cr.position.set(-0.35, 0, -0.5); cap.add(cr);
   },
 });
 // jade bracelet on a plinth (front)
@@ -485,16 +525,30 @@ const jade = makeBuilding({
   },
 });
 
+// jade revival glint: a 4-point gold star sweeps across the bracelet (and once more in the end hold)
+{
+  const gm = new THREE.MeshBasicMaterial({ color: new THREE.Color('#FFF3C8').multiplyScalar(1.8) });
+  const star = new THREE.Group(); island.add(star); star.layers.set(L_FX);
+  for (const [sx, sy] of [[0.05, 0.6], [0.6, 0.05]]) { const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 0), gm); m.scale.set(sx, sy, 0.05); m.layers.set(L_FX); star.add(m); }
+  star.lookAt(DIR); // faces the camera
+  const T = [revAt('jade') + 0.05, 9.15];
+  on((t) => {
+    let s = 0, k0 = 0;
+    for (const t0 of T) { const u = (t - t0) / 0.32; if (u > 0 && u < 1) { s = Math.sin(Math.PI * u); k0 = u; } }
+    star.visible = s > 0.01;
+    star.scale.setScalar(Math.max(1e-4, s * 0.9));
+    star.position.set(JADE.x - 0.25 + 0.5 * k0, TILE_H + 1.2 + 0.1 * k0, JADE.z + 0.25 - 0.5 * k0);
+    star.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), DIR); star.rotateZ(k0 * 0.8);
+  });
+}
 // ---------------------------------------------------------------- new growth: houses, warehouses, trees (grow with the flood)
 const growT = (x, z, j = 0) => floodAt(Math.hypot(x, z)) + 0.06 + j;
-const HOUSES = [
-  [-1, -4, 0.75, 'gable', PAL.ivory, PAL.red], [-2, -5, 0.6, 'flat', PAL.peach, PAL.gold], [-4, -1, 0.95, 'flat', PAL.ivory, PAL.red], [-5, -2, 0.6, 'gable', PAL.peach, PAL.red],
-  [-1, -6, 0.5, 'gable', PAL.ivory, PAL.gold], [-3, -5.0, 1.25, 'flat', PAL.ivory2, PAL.ink],
-  [1, -4, 0.85, 'flat', PAL.ivory, PAL.gold], [2, -5, 0.55, 'gable', PAL.peach, PAL.red], [4, -1, 0.8, 'gable', PAL.ivory, PAL.red], [5, -2, 0.62, 'flat', PAL.peach, PAL.red],
-  [1, -6, 0.5, 'gable', PAL.ivory, PAL.red], [5, -3, 0.5, 'flat', PAL.ivory, PAL.gold],
-  [-1, 4, 0.7, 'gable', PAL.ivory, PAL.red], [-2, 5, 0.55, 'flat', PAL.peach, PAL.gold], [-5, 2, 0.75, 'gable', PAL.ivory, PAL.red], [-4, 1, 0.55, 'flat', PAL.ivory2, PAL.red],
-  [-1, 6, 0.42, 'gable', PAL.peach, PAL.red], [-5, 3, 0.45, 'flat', PAL.ivory, PAL.gold],
-  [4, 1, 0.55, 'flat', PAL.ivory, PAL.red], [5, 2, 0.45, 'gable', PAL.peach, PAL.red], [6, 1, 0.38, 'flat', PAL.ivory2, PAL.gold],
+const HOUSES = [   // round 2: 40 % fewer, red carries the roofs, gold roofs only twice
+  [-1, -4, 0.75, 'gable', PAL.ivory, PAL.red], [-4, -1, 0.95, 'flat', PAL.ivory, PAL.red], [-5, -2, 0.6, 'gable', PAL.peach, PAL.red],
+  [-3, -5.0, 1.15, 'flat', PAL.ivory2, PAL.red],
+  [1, -4, 0.85, 'flat', PAL.ivory, PAL.gold], [4, -1, 0.8, 'gable', PAL.ivory, PAL.red], [5, -2, 0.62, 'flat', PAL.peach, PAL.red],
+  [-1, 4, 0.7, 'gable', PAL.ivory, PAL.red], [-5, 2, 0.75, 'gable', PAL.ivory, PAL.red], [-2, 5, 0.55, 'flat', PAL.peach, PAL.red],
+  [4, 1, 0.55, 'flat', PAL.ivory, PAL.gold], [5, 2, 0.45, 'gable', PAL.peach, PAL.red], [-4, 1, 0.55, 'flat', PAL.ivory2, PAL.red],
 ];
 HOUSES.forEach(([x, z, h, rt, wall, rc], n) => {
   makeBuilding({
@@ -503,10 +557,10 @@ HOUSES.forEach(([x, z, h, rt, wall, rc], n) => {
   });
 });
 // gold ginkgo trees
-const TREES = [[-2, -3], [-1, -3], [-3, -2], [2, -3], [3, -1], [1, -3], [-2, 3], [-3, 1], [-3, 2], [1, 3], [2, 3], [3, 2], [3, 1], [5, 1.0], [-6, -1], [-4, -2], [-2, -4], [4, -2], [-4, 2], [-1, 5], [5, -1], [2, 6], [-6, 1]];
+const TREES = [[-2, -3], [-3, -2], [2, -3], [3, -1], [-2, 3], [-3, 1], [1, 3], [3, 2], [5, 1.0], [-6, -1], [-2, -4], [4, -2], [-4, 2], [-1, 5], [2, 6], [-6, 1], [1, -6], [-1, -6]];
 {
   const trunkG = cyl(0.035, 0.05, 0.22, 8), crownG = new THREE.IcosahedronGeometry(0.21, 1);
-  const crownM = std(PAL.gold, { rough: 0.55 }), crownM2 = std('#EFC94A', { rough: 0.55 }), trunkM = std('#8E6A55');
+  const crownM = std('#F2D9C4', { rough: 0.7 }), crownM2 = std('#F8EDE0', { rough: 0.7 }), trunkM = std('#B98F78');   // r2: gold is reserved for the hero accents
   TREES.forEach(([x, z], n) => {
     const g = new THREE.Group(); island.add(g);
     const ox = (A.hash(n * 5.1) - 0.5) * 0.25, oz = (A.hash(n * 9.3) - 0.5) * 0.25;
@@ -568,7 +622,7 @@ const courtParts = [];
     emb.material.color.setScalar(1 + 0.6 * (t > CT.emblem ? Math.exp(-(t - CT.emblem) / 0.15) : 0));
   });
 }
-const COURT_TOP = new THREE.Vector3(1.0, 2.36, 0);
+const COURT_TOP = new THREE.Vector3(-0.05, 2.4, 0);
 
 // ---------------------------------------------------------------- the gavel (from the logo): drops in, strikes the seal, leaves
 const gavel = new THREE.Group(); island.add(gavel);
@@ -592,43 +646,61 @@ const gavelPivot = new THREE.Group(); gavel.add(gavelPivot);
   gavel.userData = { L, half: tot / 2 };
   gavel.rotation.order = 'YXZ'; gavel.rotation.y = Math.PI / 4;   // handle points screen-right, as in the logo
 }
-on((t) => {
-  const { L, half } = gavel.userData;
-  const S0 = cues.strike;
-  const contactY = TILE_H + 0.06 + half;
-  let th, py = contactY, vis = true;
-  if (t < S0) { const u = A.clamp(t / S0); th = -0.95 * (1 - u * u * (1.6 - 0.6 * u)); py = contactY + 0.9 * (1 - u * u); }
+// two strikes: the hook (on the seal, 0.30) and the 落槌 on the auction screen (5.80). Each: 3-frame raised hold,
+// 6-frame cubic ease-in swing about the hand (last 2 frames carry ~70 % of the travel), squash on contact, recoil, exit up-right.
+function strikePose(t, S0, headPos, enter) {
+  const { L } = gavel.userData;
+  const W0 = S0 - 0.2;
+  let th, dy, dx = 0, vis = true;
+  if (t < W0) { th = -0.95; dy = 0.9 + (enter ? 7 * Math.pow(1 - A.clamp((t - (W0 - 0.22)) / 0.22), 3) : 0) + 0.03 * Math.sin(t * 9); }
+  else if (t < S0) { const u = (t - W0) / 0.2, e = u * u * u; th = -0.95 * (1 - e); dy = 0.9 * (1 - e); }
   else {
     const u = t - S0;
-    th = u < 0.12 ? -0.22 * Math.sin(Math.PI * u / 0.24) * (1 - u / 0.3) : -0.18 - 0.5 * A.easeInCubic(A.clamp((u - 0.12) / 0.4));
-    py = contactY + (u < 0.12 ? 0.25 * Math.sin(Math.PI * u / 0.24) : 0.25 + 9 * A.easeInCubic(A.clamp((u - 0.12) / 0.45)));
-    if (u > 0.6) vis = false;
+    th = -0.3 * Math.sin(Math.PI * Math.min(u, 0.1) / 0.2) - 0.6 * A.easeInCubic(A.clamp((u - 0.1) / 0.22));
+    dy = 0.35 * Math.sin(Math.PI * Math.min(u, 0.1) / 0.2) + 10 * Math.pow(A.clamp((u - 0.08) / 0.24), 2);
+    dx = 2.5 * Math.pow(A.clamp((u - 0.08) / 0.24), 2);
+    if (u > 0.34) vis = false;
   }
-  gavel.visible = vis;
-  // pivot at the hand: head centre sits at distance L along -handle
-  _v.copy(R_).multiplyScalar(L);
-  gavel.position.set(_v.x, py, _v.z);
-  gavelPivot.rotation.z = th;
+  _v.copy(R_).multiplyScalar(L + dx);
+  return { vis, x: headPos.x + _v.x, y: headPos.y + dy, z: headPos.z + _v.z, th };
+}
+on((t) => {
+  const { half } = gavel.userData;
+  const G2 = cues.gavel2[1];
+  let p, S0;
+  if (t < 2) { S0 = cues.strike; p = strikePose(t, S0, new THREE.Vector3(0, TILE_H + 0.06 + half, 0), false); }
+  else {
+    S0 = G2;
+    const topY = SCREEN_P.y + (SH_ + 0.16) / 2 + 0.06 * Math.sin(S0 * 1.9) + half;
+    p = strikePose(t, S0, new THREE.Vector3(SCREEN_P.x, topY, SCREEN_P.z), true);
+    if (t < G2 - 0.45) p.vis = false;
+  }
+  gavel.visible = p.vis;
+  gavel.position.set(p.x, p.y, p.z);
+  gavelPivot.rotation.z = p.th;
   const u = t - S0, sq = u > 0 ? Math.exp(-u / 0.045) : 0;
   gavelPivot.scale.set(1 + 0.06 * sq, 1 - 0.1 * sq, 1 + 0.06 * sq);
 });
 
 // ---------------------------------------------------------------- data streams: gold arcs courthouse -> each asset
 const streamTargets = {
-  factory: new THREE.Vector3(-3.4, 1.35, 3.5), machines: new THREE.Vector3(3.6, 1.95, -3.4),
+  factory: new THREE.Vector3(-3.4, 1.35, 3.5), machines: new THREE.Vector3(3.3, 1.45, -3.6),
   tower: new THREE.Vector3(-3.5, 4.0, -3.5), jade: new THREE.Vector3(JADE.x, 1.3, JADE.z),
 };
 const streams = [];
 {
   const sm = new THREE.MeshBasicMaterial({ color: C('#F2C83A') });
+  const haloM = new THREE.MeshBasicMaterial({ color: C(PAL.gold), transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending });
   const pm = new THREE.MeshBasicMaterial({ color: new THREE.Color(PAL.gold).multiplyScalar(2.6) });
   for (const [k, p1] of Object.entries(streamTargets)) {
     const p0 = COURT_TOP.clone();
-    const mid = p0.clone().lerp(p1, 0.5); mid.y = Math.max(p0.y, p1.y) + 1.6;
+    const mid = p0.clone().lerp(p1, 0.5); mid.y = Math.max(p0.y, p1.y) + 1.15;
     const curve = new THREE.QuadraticBezierCurve3(p0, mid, p1);
     const SEG = 80, RAD = 6;
     const geo = new THREE.TubeGeometry(curve, SEG, 0.028, RAD, false);
     const tube = new THREE.Mesh(geo, sm); tube.layers.set(L_FX); island.add(tube);
+    const hgeo = new THREE.TubeGeometry(curve, SEG, 0.075, RAD, false);
+    const halo = new THREE.Mesh(hgeo, haloM); halo.layers.set(L_FX); island.add(halo);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 12), pm); head.layers.set(L_FX); island.add(head);
     const beads = [0, 1, 2].map(() => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), pm); b.layers.set(L_FX); island.add(b); return b; });
     const t0 = S[k];
@@ -636,8 +708,8 @@ const streams = [];
     on((t) => {
       const u = A.easeInOutCubic(A.clamp((t - t0) / TR));
       const n = Math.floor(u * SEG);
-      geo.setDrawRange(0, n * RAD * 6);
-      tube.visible = t > t0 && n > 0;
+      geo.setDrawRange(0, n * RAD * 6); hgeo.setDrawRange(0, n * RAD * 6);
+      tube.visible = t > t0 && n > 0; halo.visible = tube.visible;
       head.visible = t > t0 && t < t0 + TR + 0.05;
       if (head.visible) head.position.copy(curve.getPoint(Math.min(1, u)));
       beads.forEach((b, i) => {
@@ -715,7 +787,7 @@ const streams = [];
 }
 
 // ================================================================== live-auction screen (floating iso panel, faces +X)
-const SCREEN_P = new THREE.Vector3(2.4, 3.7, -2.4);
+const SCREEN_P = new THREE.Vector3(1.6, 4.3, -3.6);
 const screen = new THREE.Group(); island.add(screen); screen.position.copy(SCREEN_P);
 const scrFlip = new THREE.Group(); screen.add(scrFlip);
 const SW_ = 3.5, SH_ = 2.18;
@@ -777,12 +849,13 @@ function drawScreen(t) {
     screen.visible = s > 0.002;
     screen.scale.setScalar(Math.max(1e-4, s));
     screen.position.y = SCREEN_P.y + 0.06 * Math.sin(t * 1.9) * A.smooth(A.inv(T0, T0 + 0.6, t));
-    // flip to 成交: 0.28 s with anticipation + overshoot
-    const u = t - (TD - 0.14);
+    // flip to 成交 on the gavel contact: 180° in 6 frames with ~8° overshoot, then settle
+    const u = t - TD;
     let a = 0;
-    if (u > 0) a = Math.PI * A.clamp(A.easeOutBack(A.clamp(u / 0.3), 1.4), 0, 1.12);
-    if (u > -0.12 && u < 0) a = -0.12 * Math.sin(Math.PI * (u + 0.12) / 0.24);
+    if (u > 0) a = u < 0.2 ? Math.PI * (1 + 0.045) * A.easeOutCubic(u / 0.2) : Math.PI * (1 + 0.045 * Math.exp(-(u - 0.2) / 0.06) * Math.cos((u - 0.2) * 30));
     scrFlip.rotation.y = a;
+    const fl = u > 0 ? Math.exp(-u / 0.05) : 0;                                  // 1-frame #FFF6D8 face flash
+    front.material.color.setRGB(1 + 1.6 * fl, 1 + 1.5 * fl, 1 + 1.1 * fl); back.material.color.copy(front.material.color);
     drawScreen(TXT.t ?? t);
     // retire with the figures
     const out = A.smooth(A.inv(cues.fig_out + 0.05, cues.fig_out + 0.32, t));
@@ -790,34 +863,55 @@ function drawScreen(t) {
     if (out >= 1) screen.visible = false;
   });
 }
-// gold burst at the deal: sparks + shock ring
+// gold burst at the deal: shards + coins on parabolic arcs that land on the tiles, a flat iso ground ring racing to the rim
+const DEAL_CLICKS = [];
 {
-  const sp = new THREE.MeshBasicMaterial({ color: new THREE.Color(PAL.gold).multiplyScalar(2.2) });
+  const sp = new THREE.MeshBasicMaterial({ color: new THREE.Color(PAL.gold).multiplyScalar(2.0) });
   const sp2 = new THREE.MeshBasicMaterial({ color: new THREE.Color('#FFF0B8').multiplyScalar(1.6) });
+  const coinM2 = std(PAL.gold, { rough: 0.35 });
   const R = A.rng(77);
-  const parts = Array.from({ length: 46 }, (_, i) => {
-    const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.06 + R() * 0.05, 0), i % 3 ? sp : sp2); m.layers.set(L_FX); island.add(m);
-    const a = R() * Math.PI * 2, e = (R() - 0.3) * 1.2;
-    const v = new THREE.Vector3(Math.cos(a) * Math.cos(e) * 0.6, Math.sin(e) + 0.6, Math.sin(a) * Math.cos(e)).normalize().multiplyScalar(3.2 + R() * 3.5);
-    return { m, v, spin: R() * 10, life: 0.6 + R() * 0.5 };
+  const G = 9.0, FLOOR_Y = TILE_H + 0.03;
+  const parts = Array.from({ length: 40 }, (_, i) => {
+    const coin = i % 4 === 0;
+    const m = coin ? mesh(cyl(0.11, 0.11, 0.03, 24), coinM2, false) : new THREE.Mesh(new THREE.OctahedronGeometry(0.05 + R() * 0.05, 0), i % 3 ? sp : sp2);
+    if (!coin) m.layers.set(L_FX);
+    island.add(m);
+    const a = R() * Math.PI * 2, sp0 = 2.2 + R() * 3.4;
+    const v = new THREE.Vector3(Math.cos(a) * sp0, 2.5 + R() * 3.5, Math.sin(a) * sp0);
+    // closed-form landing time on the tiles
+    const y0 = SCREEN_P.y, dy = y0 - FLOOR_Y;
+    const tl = (v.y + Math.sqrt(v.y * v.y + 2 * G * dy)) / G;
+    if (i % 5 === 0 && tl < 1.3) DEAL_CLICKS.push(+(tl).toFixed(3));
+    return { m, v, spin: 4 + R() * 10, tl, coin };
   });
-  const ringM = new THREE.MeshBasicMaterial({ color: new THREE.Color('#FFE38A').multiplyScalar(1.4), transparent: true, depthWrite: false, side: THREE.DoubleSide });
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1.0, 96), ringM); ring.rotation.y = Math.PI / 2; ring.layers.set(L_FX); island.add(ring);
+  // flat ground ring (true iso ellipse) from the screen's footprint to the rim in 10 frames
+  const rgM = new THREE.MeshBasicMaterial({ color: new THREE.Color('#FFE38A').multiplyScalar(1.3), transparent: true, depthWrite: false, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.94, 1.0, 128), rgM); ring.rotation.x = -Math.PI / 2; ring.layers.set(L_FX); island.add(ring);
+  const ring2 = new THREE.Mesh(new THREE.RingGeometry(0.97, 1.0, 128), rgM); ring2.rotation.x = -Math.PI / 2; ring2.layers.set(L_FX); island.add(ring2);
   on((t) => {
     const u = t - cues.deal;
     for (const p of parts) {
-      p.m.visible = u > 0 && u < p.life;
+      p.m.visible = u > 0 && u < p.tl + 0.5;
       if (!p.m.visible) continue;
-      const k = u / p.life;
-      p.m.position.set(SCREEN_P.x + p.v.x * u * 0.6, SCREEN_P.y + p.v.y * u - 4.5 * u * u, SCREEN_P.z + p.v.z * u * 0.8);
-      p.m.scale.setScalar(Math.max(1e-4, 1 - k * k));
-      p.m.rotation.set(p.spin * u, p.spin * u * 0.7, 0);
+      const uu = Math.min(u, p.tl);
+      p.m.position.set(SCREEN_P.x + p.v.x * uu, SCREEN_P.y + p.v.y * uu - 0.5 * G * uu * uu, SCREEN_P.z + p.v.z * uu);
+      const after = Math.max(0, u - p.tl);
+      if (after > 0) p.m.position.y = FLOOR_Y + 0.06 * Math.abs(Math.sin(after * 18)) * Math.exp(-after * 12);
+      const s = after > 0 ? 1 - A.smooth(A.clamp((after - 0.2) / 0.3)) : 1;
+      p.m.scale.setScalar(Math.max(1e-4, s));
+      p.m.rotation.set(after > 0 ? 0 : p.spin * uu, p.spin * uu * 0.7, after > 0 ? 0 : p.spin * uu * 0.4);
     }
-    ring.visible = u > 0 && u < 0.45;
-    if (ring.visible) { const s = 1.2 + 3.2 * A.easeOutCubic(u / 0.45); ring.scale.setScalar(s); ring.position.set(SCREEN_P.x + 0.1, SCREEN_P.y, SCREEN_P.z); ringM.opacity = 0.9 * (1 - u / 0.45); }
+    const g = u - 0.02;
+    [ring, ring2].forEach((r, k) => {
+      const gg = g - k * 0.08;
+      r.visible = gg > 0 && gg < 0.42;
+      if (!r.visible) return;
+      const sc = 0.4 + 9.0 * A.easeOutCubic(gg / 0.34);
+      r.scale.setScalar(sc); r.position.set(SCREEN_P.x * (1 - A.easeOutCubic(gg / 0.34)), TILE_H + 0.03, SCREEN_P.z * (1 - A.easeOutCubic(gg / 0.34)));
+    });
+    rgM.opacity = 0.85 * (1 - A.smooth(A.clamp((g - 0.12) / 0.3)));
   });
 }
-
 // ================================================================== proof figures on iso panels (faces +X), count-up
 const FIG = [
   { pre: '近', num: 400, post: '家法院', fmt: (v) => String(Math.round(v)) },
@@ -831,7 +925,7 @@ const figs = FIG.map((f, i) => {
   const ct = canvasTex(PX, PY);
   const grp = new THREE.Group(); island.add(grp);
   // authored in the hero frame: each panel's left foot at these px
-  const anchor = worldAt([1150, 1225, 1300][i], [500, 680, 860][i], -0.6, HERO_T);
+  const anchor = worldAt([150, 215, 280][i], [470, 660, 850][i], -0.6, HERO_T);
   grp.position.copy(anchor);
   const slab = mesh(rbox(1.15, 0.16, PL + 0.5, 0.04), std(PAL.ivory)); slab.position.set(0, -0.16, -PL / 2); grp.add(slab);
   const edge = mesh(box(1.16, 0.035, PL + 0.52), std(PAL.gold, { metal: 0.5, rough: 0.3 })); edge.position.set(0, -0.06, -PL / 2); grp.add(edge);
@@ -867,7 +961,7 @@ on((t) => {
     const sIn = t < tin - 0.12 ? 0 : A.easeOutCubic(A.clamp((t - tin + 0.12) / 0.2));
     const out = A.easeInCubic(A.clamp((t - tout) / 0.22));
     F.grp.visible = sIn > 0.001 && out < 0.999;
-    F.grp.position.y = worldAt([1150, 1225, 1300][i], [500, 680, 860][i], -0.6, HERO_T).y - 1.2 * (1 - sIn) - 1.5 * out;
+    F.grp.position.y = worldAt([150, 215, 280][i], [470, 660, 850][i], -0.6, HERO_T).y - 1.2 * (1 - sIn) - 1.5 * out;
     F.slab.scale.set(1, 1, Math.max(1e-4, sIn)); F.edge.scale.set(1, 1, Math.max(1e-4, sIn));
     const wg = t < tin ? 0 : A.easeOutBack(A.clamp((t - tin) / 0.3), 2.0) * (1 - out);
     F.wall.scale.set(1, Math.max(1e-4, wg), 1); F.wall.visible = wg > 0.002;
@@ -876,8 +970,8 @@ on((t) => {
     F.cap.visible = cs > 0.002; F.cap.position.y = PH * wg + (t < tc ? 0 : 0.3 * Math.max(0, 1 - A.easeOutCubic((t - tc) / 0.1)));
     F.cap.scale.set(1, 1, Math.max(1e-4, cs));
     const tt = TXT.t ?? t;
-    const cnt = A.easeOutCubic(A.clamp((tt - tin - 0.05) / cues.count_dur));
-    F.draw(FIG[i].num * cnt);
+    const cnt = A.easeOutExpo(A.clamp((tt - tin - 0.03) / cues.count_dur));   // starts at 60 %: no readable '0' frames
+    F.draw(FIG[i].num * (0.6 + 0.4 * cnt));
   });
 });
 
@@ -924,10 +1018,10 @@ const titleParts = [];
   const nameG = new THREE.Group(); place(nameG, LG + 0.45, -0.1); title.add(nameG);
   const nameFront = textPlane('能拍法服', (px) => `900 ${px}px ${SERIF}`, NAME_EM, PAL.ink, { pxu: 260, track: 0.04 });
   nameG.add(nameFront.me); nameFront.me.position.x = 0.0;
-  const depthN = 7;
+  const depthN = 4;
   for (let k = 1; k <= depthN; k++) {
-    const c = textPlane('能拍法服', (px) => `900 ${px}px ${SERIF}`, NAME_EM, k === depthN ? PAL.redDeep : PAL.red, { pxu: 260, track: 0.04 });
-    c.me.position.set(-0.018 * k, 0, 0); c.m.depthTest = true; c.me.renderOrder = -k; nameG.add(c.me);
+    const c = textPlane('能拍法服', (px) => `900 ${px}px ${SERIF}`, NAME_EM, '#7A1A19', { pxu: 260, track: 0.04 });
+    c.me.position.set(-0.014 * k, 0, 0); c.m.depthTest = true; c.me.renderOrder = -k; nameG.add(c.me);
   }
   nameFront.me.renderOrder = 1;
   titleParts.push({ kind: 'rise', g: nameG, t: cues.title.name, clipY: null, h: NAME_EM * 1.1 });
@@ -939,9 +1033,9 @@ const titleParts = [];
   const slogan = textPlane('让司法更高效 · 焕资产新价值', (px) => `500 ${px}px ${SANS}`, 0.86, PAL.ink, { pxu: 300, track: 0.06 });
   const sloG = new THREE.Group(); sloG.add(slogan.me); place(sloG, 0.0, -1.85); title.add(sloG);
   titleParts.push({ kind: 'rise', g: sloG, t: cues.title.slogan, h: 1.0 });
-  const small = textPlane('NENGPAI · 综合司法辅助服务', (px) => `500 ${px}px ${SANS}`, 0.5, '#8A7B70', { pxu: 360, track: 0.16 });
-  const smG = new THREE.Group(); smG.add(small.me); place(smG, 0.0, -2.8); title.add(smG);
-  titleParts.push({ kind: 'rise', g: smG, t: cues.title.small, h: 0.55 });
+  const small = textPlane('NENGPAI · 综合司法辅助服务', (px) => `500 ${px}px ${SANS}`, 0.62, '#5E524C', { pxu: 360, track: 0.16 });
+  const smG = new THREE.Group(); smG.add(small.me); place(smG, 0.0, -2.95); title.add(smG);
+  titleParts.push({ kind: 'rise', g: smG, t: cues.title.small, h: 0.68 });
   // per-part world clip planes (text rises out of a slot at its own baseline)
   title.updateMatrixWorld(true);
   for (const p of titleParts) if (p.kind === 'rise') {
@@ -1005,7 +1099,7 @@ function addPar(obj, px, py, yW, tAuth, m, drift) {
 {
   const c1 = mesh(mergeGeometries(cloudGeo(3)), cloudM, false); c1.scale.set(1.5, 1.1, 1.5); fg.add(c1); addPar(c1, 170, 175, 6, 9.4, 1.25, [0.05, 0]);
   const c2 = mesh(mergeGeometries(cloudGeo(8)), cloudM, false); c2.scale.set(1.25, 0.95, 1.25); fg.add(c2); addPar(c2, 1840, 1010, 2, 9.4, 1.25, [-0.06, 0]);
-  const c3 = mesh(mergeGeometries(cloudGeo(13)), cloudM, false); c3.scale.set(1.1, 0.85, 1.1); fg.add(c3); addPar(c3, 1700, 160, 6, 6.6, 1.25, [0.04, 0]);
+  const c3 = mesh(mergeGeometries(cloudGeo(13)), cloudM, false); c3.scale.set(1.1, 0.85, 1.1); fg.add(c3); addPar(c3, 1790, 905, 6, 5.8, 1.25, [0.04, 0]);
   const c4 = mesh(mergeGeometries(cloudGeo(21)), cloudM, false); c4.scale.set(1.0, 0.8, 1.0); fg.add(c4); addPar(c4, 90, 990, 2, 9.4, 1.25, [0.05, 0]);
   const d1 = makeDoc(1.0); fg.add(d1); addPar(d1, 1600, 260, 5, 9.4, 1.25, [0, 0]); d1.userData.spin = [0.6, 0.3, 0.2, 0];
   const d2 = makeDoc(0.85); fg.add(d2); addPar(d2, 1800, 700, 3, 6.6, 1.25, [0, 0]); d2.userData.spin = [0.3, -0.5, 0.4, 1];
@@ -1063,9 +1157,11 @@ window.renderAt = async (t) => {
   acc.finalMat.uniforms.uExposure.value = 1.0;
   acc.bloomOn = t > cues.deal - 0.05 && t < cues.deal + 1.0;   // only the deal burst needs bloom (saves ~2 s/frame in software GL)
   TXT.t = t;
-  acc.frame(scene, camera, SPP, (i, n, sub) => {
+  const fast = t < 0.75 || (t > 5.55 && t < 6.15) || (t > PB0 && t < PB1);
+  const spp = q.get('spp') ? SPP : (fast ? 16 : 8);
+  acc.frame(scene, camera, spp, (i, n, sub) => {
     const ts = Math.max(0, t + (sub.frac - 0.5) * SHUTTER / FPS);
-    const tc = Math.max(0, t + (sub.frac - 0.5) * 0.3 / FPS);
+    const tc = Math.max(0, t + (sub.frac - 0.5) * 0.15 / FPS);   // camera: ~27° shutter, objects keep 180°
     update(ts, sub, tc);
   }, t);
   glx.finish();

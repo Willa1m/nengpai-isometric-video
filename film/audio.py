@@ -28,14 +28,15 @@ CH = {
     'Dmaj9': ['D3', 'F#4', 'A4', 'C#5', 'E5'], 'D/F#': ['F#2', 'D4', 'F#4', 'A4'],
 }
 SEG = [(0.3, 1.8, 'Bm7'), (1.8, 2.8, 'Gmaj7'), (2.8, 3.8, 'D/F#'), (3.8, 4.8, 'Bm7'), (4.8, 5.8, 'Asus'),
-       (5.8, 6.8, 'Dmaj7'), (6.8, 7.8, 'Gmaj7'), (7.8, 8.3, 'Em7'), (8.3, 8.8, 'A'), (8.8, 10.0, 'Dmaj9')]
+       (5.8, 6.8, 'Dmaj7'), (6.8, 7.8, 'Gmaj7'), (7.8, 8.05, 'Em7'), (8.05, F, 'A'), (F, 10.0, 'Dmaj9')]
 ROOT = {'Bm7': 'B1', 'Asus': 'A1', 'A': 'A1', 'Gmaj7': 'G1', 'Dmaj7': 'D2', 'Em7': 'E2', 'Dmaj9': 'D2', 'D/F#': 'F#1'}
 
-pad = m.track('pad', level=-25, sends={'hall': -9})
+from pedalboard import PeakFilter, HighpassFilter
+pad = m.track('pad', level=-25, sends={'hall': -9}, fx=[HighpassFilter(90), PeakFilter(250, -3.0, 1.0)])   # r2: phone translation
 for a, b, c in SEG:
     pad.add(synth.pad([N(n) for n in CH[c]], b - a + 0.4, 0.75, 'glass'), a)
-pad.automate('lpf', [(0, 700), (1.8, 1600), (5.7, 4200), (5.8, 9000), (7.7, 9000), (8.3, 2600), (8.8, 7000), (10, 5200)])
-pad.automate('gain', [(0, -14), (0.35, -6), (1.8, -2), (7.8, -1), (8.4, -5), (8.8, 0), (10, 0)])
+pad.automate('lpf', [(0, 700), (1.8, 1600), (5.7, 4200), (5.8, 9000), (7.6, 9000), (8.0, 2600), (F, 7000), (10, 5200)])
+pad.automate('gain', [(0, -14), (0.35, -6), (1.8, -2), (7.6, -1), (8.0, -5), (F, 0), (10, 0)])
 
 # ------------------------------------------------------------------ HOOK: gavel falls, knocks at 0.30
 m.sfx(sfx.swish(0.28, direction=-1, seed=2), at=ST - 0.05, gain=-12)
@@ -45,13 +46,14 @@ def knock(t, g0=0.0):
     m.sfx(sfx.impact('thud', size=0.55), at=t, gain=g0 - 4)
     m.sfx(drums.tom('low', 0.9, 'acoustic').loud(-18), at=t, gain=g0 - 7)
     m.sfx(sfx.stamp('wood'), at=t, gain=g0 - 6)
+    m.sfx(sfx.click('hard'), at=t, gain=g0 - 5)          # r2: 2-5 kHz wooden transient so the knock reads on phone speakers
 knock(ST)
 m.sfx(sfx.sub_drop(0.6, 80, 40), at=ST, gain=-10)
 m.sfx(sfx.whoosh(0.9, 'soft', direction=1, peak=0.15, seed=4), at=ST + 0.12, gain=-15)     # red ripple runs out
 m.sfx(sfx.swell(mar('B4', 0.5), 0.5), at=ST + 0.02, gain=-14)
 
 # tiles: granular wood clicks per ring + rising marimba notes (16ths)
-ev = m.track('events', level=-19.5, sends={'delay8': -14, 'room': -12})
+ev = m.track('events', level=-19.5, sends={'delay8': -14, 'room': -12}, fx=[PeakFilter(3000, 3.0, 0.9)])
 R = np.random.default_rng(7)
 ring_notes = ['B4', 'D5', 'E5', 'F#5', 'A5', 'B5', 'D6', 'E6']
 for k, t in enumerate(cues['tile_clicks']):
@@ -91,25 +93,25 @@ m.sfx(sfx.blip('D6', 'tri', 0.07), at=cues['trucks'] + 0.27, gain=-16, pan=-0.2)
 
 # groove from the first bar line
 kick = lambda v=1.0: drums.kick('soft', v, decay=0.24)
-kt = m.track('kick', level=-18.5)
+kt = m.track('kick', level=-19.5)
 kt.loop(kick, 'x.......x.......', 1.8, 3.8, vel=0.8).loop(kick, 'x...x...x...x...', 3.8, 5.3, vel=0.85).loop(kick, 'x...x...x.x.x...', 5.3, 5.8, vel=0.9)
 kt.loop(kick, 'x...x...x...x...', 5.8, 7.8)
 sh = m.track('shaker', level=-31, pan=0.3)
 sh.loop(lambda v: drums.shaker(v), 'x.xxx.xxx.xxx.xx', 1.8, 7.8, vel=0.55, vel_jitter=0.2)
 sh.automate('gain', [(1.8, -8), (5.7, 0), (7.8, 0)])
-bs = m.track('bass', level=-22)
+bs = m.track('bass', level=-24, fx=[HighpassFilter(55)])
 for a, b, c in SEG:
     if a < 1.8 or a >= 7.8: continue
     for t, v in seq.step_times(g, a, b, 8, 'x..x..x.' if a < 5.8 else 'x.xx.x.x'):
         bs.add(synth.bass(N(ROOT[c]) + 12, 0.18, 0.8 * v, 'pluck'), t)
 bs.duck(by='kick', depth=4, release=0.12)
-sub = m.track('sub', level=-24)
+sub = m.track('sub', level=-27.5)
 for a, b, c in SEG:
     if 3.8 <= a < 7.8: sub.add(synth.bass(N(ROOT[c]), b - a, 0.7, 'sub'), a)
 sub.duck(by='kick', depth=5, release=0.14)
 
 # marimba melody (D major pentatonic, 8ths), confident and plucky
-mel = m.track('melody', level=-21, sends={'delay8': -13, 'room': -13}, pan=-0.05)
+mel = m.track('melody', level=-21, sends={'delay8': -13, 'room': -13}, pan=-0.05, fx=[PeakFilter(3200, 3.5, 0.9)])
 MEL = [  # (bar-relative 8th index, note, len 8ths)
     (1.8, ['D5', '-', 'F#5', 'A5', '-', 'B5', 'A5', 'F#5', 'E5', '-', 'D5', 'E5', 'F#5', '-', 'A5', '-']),
     (3.8, ['B5', '-', 'A5', 'F#5', '-', 'E5', 'F#5', 'A5', 'B5', '-', 'D6', 'B5', 'A5', '-', 'E5', 'F#5']),
@@ -135,7 +137,10 @@ for t, v in seq.roll(5.3, DEAL, 8, 32, grid=g, vel0=0.3, vel1=0.85):
     sn.add(drums.snare('tight', v), t)
 
 # ------------------------------------------------------------------ DEAL 5.80: 落槌 + 成交 ding + gold burst
-knock(DEAL - 0.14 + 0.14, 1.0)
+knock(DEAL, 1.0)
+m.sfx(sfx.sub_drop(0.5, 70, 38), at=DEAL, gain=-9)
+for k, dt in enumerate([0.55, 0.62, 0.71, 0.8, 0.93]):     # shards and coins land on the tiles
+    m.sfx(sfx.click('wood') if k % 2 else sfx.tick('hi'), at=DEAL + dt, gain=-15 - k, pan=float(np.sin(k * 2.1) * 0.5))
 m.sfx(sfx.ding('A6'), at=DEAL + 0.02, gain=-1)
 m.sfx(sfx.shimmer_hit('D7'), at=DEAL + 0.02, gain=-5)
 m.sfx(sfx.impact('cinematic', size=0.7), at=DEAL, gain=-6)
@@ -171,13 +176,14 @@ m.sfx(sfx.shimmer_hit('F#6'), at=F, gain=-7)
 kt.add(kick(0.8), F)
 sub.add(synth.bass(N('D2'), 1.1, 0.75, 'sub'), F)
 # living hold: two soft blinks of glock in the end hold
-m.track('glock4', level=-30, sends={'plate': -8}).add(glk('E7', 0.3), 9.3).add(glk('A7', 0.25), 9.55)
+m.track('glock4', level=-30, sends={'plate': -8}).add(glk('E7', 0.3), 9.15).add(glk('A7', 0.25), 9.4)
+m.sfx(sfx.sparkle(0.4, 8, 'D', 'major_pentatonic', seed=21), at=cues['streams']['jade'] + cues['stream_travel'] + 0.05, gain=-12, pan=0.3)
 
 m.group('music').automate('gain', [(0, -4), (1.75, -3.5), (1.8, -2.0), (3.8, -2.0), (5.7, -3.5), (5.74, -14), (5.79, -14), (5.8, -1.0),
-                                   (7.7, 0.5), (7.8, -2.0), (8.75, -2.5), (8.8, 0.5), (10, 0.5)])
+                                   (7.5, 0.5), (7.8, -2.0), (F - 0.05, -2.5), (F, 0.5), (10, 0.5)])
 m.master_kw.update(air=0.8)
 os.makedirs(os.path.join(HERE, 'out'), exist_ok=True)
-res = m.export(os.path.join(HERE, 'out', 'audio.wav'), spectrogram=os.path.join(HERE, 'out', 'audio_spec.png'))
+res = m.export(os.path.join(HERE, 'out', 'audio.wav'), lufs=-14, tp=-1.5, spectrogram=os.path.join(HERE, 'out', 'audio_spec.png'))
 m.report()
 print({k: res[k] for k in ('duration', 'lufs', 'true_peak', 'bands', 'stereo_corr', 'warnings') if k in res})
 hits = [ST, CT['base'], DEAL] + cues['figures'] + [F]

@@ -51,6 +51,20 @@ void main(){
   }
   gl_FragColor = vec4(ao, ao, ao, 1.0);
 }`;
+const blurFrag = /* glsl */`
+precision highp float;
+uniform sampler2D tAO; uniform sampler2D tDepth; uniform vec2 uTexel; varying vec2 vUv;
+void main(){
+  float d0 = texture2D(tDepth, vUv).x;
+  float s = 0.0, w = 0.0;
+  for (int y = -2; y <= 2; y++) for (int x = -2; x <= 2; x++) {
+    vec2 o = vec2(float(x), float(y)) * uTexel;
+    float d = texture2D(tDepth, vUv + o).x;
+    float k = 1.0 / (1.0 + abs(d - d0) * 4000.0);
+    s += texture2D(tAO, vUv + o).r * k; w += k;
+  }
+  float a = s / w; gl_FragColor = vec4(a, a, a, 1.0);
+}`;
 const accFrag = /* glsl */`
 precision highp float;
 uniform sampler2D tBeauty; uniform sampler2D tAO; uniform float uWeight; varying vec2 vUv;
@@ -129,11 +143,16 @@ export class Accumulator {
       blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor,
     });
     this.accQuad = new FullScreenQuad(this.accMat);
+    this.rtAO2 = new THREE.WebGLRenderTarget(width, height, { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false });
+    this.blurMat = new THREE.ShaderMaterial({ vertexShader: aoVert, fragmentShader: blurFrag, depthTest: false, depthWrite: false, blending: THREE.NoBlending,
+      uniforms: { tAO: { value: this.rtAO.texture }, tDepth: { value: this.rtNormal.depthTexture }, uTexel: { value: new THREE.Vector2(1 / width, 1 / height) } } });
+    this.blurQuad = new FullScreenQuad(this.blurMat);
+    this.accMat.uniforms.tAO.value = this.rtAO2.texture;
     this.finalMat = new THREE.ShaderMaterial({
       vertexShader: aoVert, fragmentShader: finalFrag,
       uniforms: {
         tAccum: { value: this.rtAccum.texture }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(width, height) },
-        uExposure: { value: 1.0 }, uGrain: { value: 0.012 }, uVignette: { value: 0.16 }, uVigColor: { value: new THREE.Color(0.9, 0.82, 0.74) },
+        uExposure: { value: 1.0 }, uGrain: { value: 0.02 }, uVignette: { value: 0.16 }, uVigColor: { value: new THREE.Color(0.9, 0.82, 0.74) },
       },
       depthTest: false, depthWrite: false,
     });
@@ -184,6 +203,7 @@ export class Accumulator {
     u.uProj.value.copy(camera.projectionMatrix); u.uProjInv.value.copy(camera.projectionMatrixInverse);
     u.uKernel.value = this.kernels[0]; u.uSeed.value = 0;
     r.setRenderTarget(this.rtAO); this.aoQuad.render(r);
+    r.setRenderTarget(this.rtAO2); this.blurQuad.render(r);
     // 2) n beauty sub-samples: sub-pixel jitter (AA), jittered sun (soft shadows), sub-frame time (motion blur)
     r.setRenderTarget(this.rtAccum); r.setClearColor(0x000000, 0); r.clear(true, false, false);
     for (let i = 0; i < n; i++) {

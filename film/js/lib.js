@@ -5,7 +5,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 export const PAL = {
   red: '#AB2524', redDeep: '#7E1818', gold: '#E8BC1F', goldDeep: '#B98D0E', ink: '#2A1F1D',
   cream: '#F6F1E7', ivory: '#FBF7EF', ivory2: '#F4ECDE', ivory3: '#EDE3D1', peach: '#F4CFB8', peach2: '#EDBEA3',
-  road: '#4D403C', roadMark: '#F5E9D3', water: '#CFC2B3',
+  road: '#7A6D65', roadMark: '#F5E9D3', water: '#CFC2B3',
   dorm: '#CBC4BA', dorm2: '#C3BBB0', dormDark: '#A69D92', dormRoad: '#ADA49A', dormWin: '#958C82', dormMid: '#BAB2A7',
   winDark: '#5E504B', winLit: '#FFD066',
 };
