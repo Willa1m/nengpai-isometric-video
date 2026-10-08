@@ -37,9 +37,7 @@ export const tone = (h, dL) => { const A = oklab(h).slice(); A[0] += dL; return 
 export const rgba = (h, a) => { const [r, g, b] = hexRgb(h).map((v) => Math.round(v * 255)); return `rgba(${r},${g},${b},${a})`; };
 
 // ---------------------------------------------------------------- seeded random
-export function rng(seed) {   // seed is hashed first (adjacent seeds must not give correlated first draws)
-  let h = (seed ^ 0x9e3779b9) >>> 0; h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0; h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0; let s = (h ^ (h >>> 16)) >>> 0 || 1;
-  return () => { s = (s * 1664525 + 1013904223) >>> 0; return (s + 0.5) / 4294967296; }; }
+export function rng(seed) { let s = seed >>> 0 || 1; return () => { s = (s * 1664525 + 1013904223) >>> 0; return (s + 0.5) / 4294967296; }; }
 
 // ---------------------------------------------------------------- polygons
 export const NB = 300, NH = 48, NP = 40, NHOLE = 4, NPART = 26;
@@ -95,33 +93,17 @@ export function makeShape(body, holes = [], parts = [], fill = '#AB2524', extra 
 export function shapeArea(S) { let a = Math.abs(area(S.body)); for (const h of S.holes) if (h.on) a -= Math.abs(area(h.pts)); return a; }
 
 const _al = new Map();
-// circle points that sit on the rays from c through each vertex of P (radial correspondence); angles are made monotonic
-// (a running max) so a non-star-shaped outline still maps onto the circle without folding back
-function radialCircle(key, P, c, R) {
-  if (key && _al.has(key)) return _al.get(key);
-  const n = P.length; const ang = P.map(([x, y]) => Math.atan2(y - c[1], x - c[0]));
-  const un = [ang[0]]; for (let i = 1; i < n; i++) { let a = ang[i]; while (a < un[i - 1] - Math.PI) a += 2 * Math.PI; while (a > un[i - 1] + Math.PI) a -= 2 * Math.PI; un.push(a); }
-  const dir = un[n - 1] > un[0] ? 1 : -1; const mono = [un[0]]; for (let i = 1; i < n; i++) mono.push(dir > 0 ? Math.max(mono[i - 1], un[i]) : Math.min(mono[i - 1], un[i]));
-  const span = mono[n - 1] - mono[0], tot = dir * 2 * Math.PI;   // spread the full turn over the monotonic angles
-  const o = mono.map((a) => { const t = span ? (a - mono[0]) / span : 0, aa = mono[0] + t * tot * (n - 1) / n; return [c[0] + R * Math.cos(aa), c[1] + R * Math.sin(aa)]; });
-  if (key) _al.set(key, o); return o;
-}
 function cachedAlign(key, A, B) { if (key && _al.has(key)) return _al.get(key); const r = alignTo(A, B); if (key) _al.set(key, r); return r; }
 
 // morph A → B at linear fraction u. opts: { via: R (radius of the circle intermediate) | 0, key: cache key, stagger }
 export function morph(A, B, u, opts = {}) {
   const via = opts.via || 0, key = opts.key;
-  // via: A → circle in the first 44 %, a clean circle held for the middle 12 % (≈2.5 frames of a 0.7 s morph), circle → B
-  const g = EM(u), gA = EM(clamp(u / 0.44)), gB = EM(clamp((u - 0.56) / 0.44));
+  const g = EM(u), gA = EM(clamp(u / 0.5)), gB = EM(clamp((u - 0.5) / 0.5));
   let body;
   if (via) {
-    const vc = opts.vc || [0, 0];
-    const Ca = radialCircle(key && key + ':ca', A.body, vc, via), Cb = radialCircle(key && key + ':cb', B.body, vc, via);
+    const c = circ(opts.vc ? opts.vc[0] : 0, opts.vc ? opts.vc[1] : 0, via, NB);
+    const Ca = cachedAlign(key && key + ':ca', A.body, c), Cb = cachedAlign(key && key + ':cb', B.body, c);
     body = u < 0.5 ? lerpP(A.body, Ca, gA) : lerpP(Cb, B.body, gB);
-  } else if (opts.radial === 'A') {   // A is the circle: every vertex of B grows out along its own ray (no knots, no crumpled teeth)
-    body = lerpP(radialCircle(key && key + ':rA', B.body, [0, 0], opts.r), B.body, g);
-  } else if (opts.radial === 'B') {   // B is the circle
-    body = lerpP(A.body, radialCircle(key && key + ':rB', A.body, [0, 0], opts.r), g);
   } else body = lerpP(A.body, cachedAlign(key && key + ':ab', A.body, B.body), g);
   const holes = A.holes.map((ha, i) => {
     const hb = B.holes[i];
@@ -140,7 +122,7 @@ export function morph(A, B, u, opts = {}) {
     const matched = pa.on && pb.on && !(via && (pa.shade || pb.shade));
     if (matched) {   // matched sub-part: travels with the body, shrinks a little in flight
       const gk = EIO(clamp((u - 0.04 - o) / 0.72)), Bp = cachedAlign(key && key + ':p' + i, pa.pts, pb.pts);
-      const P = lerpP(pa.pts, Bp, gk), c = centroid(P), sh = 1 - (opts.partShrink ?? 0.42) * Math.sin(Math.PI * gk);
+      const P = lerpP(pa.pts, Bp, gk), c = centroid(P), sh = 1 - 0.42 * Math.sin(Math.PI * gk);
       return { pts: scaleAbout(P, c, sh), on: true, c: mixC(pa.c, pb.c, smooth(0.3, 0.7, gk)), a: lerp(pa.a, pb.a, gk) };
     }
     const collapseA = pa.on && (!via || u < 0.5), growB = pb.on && (!via || u >= 0.5);
@@ -148,7 +130,7 @@ export function morph(A, B, u, opts = {}) {
       const k = via ? clamp((u - o * 0.5) / 0.4) : clamp((u - o * 0.5) / 0.55); const s = 1 - EM(k);
       if (s > 0.01 || !growB) return { pts: scaleAbout(pa.pts, centroid(pa.pts), s), on: s > 0.01, c: pa.c, a: pa.a };
     }
-    if (growB) { const k = pb.shade ? clamp((u - 0.78) / 0.22) : via ? clamp((u - 0.56 - o * 0.6) / 0.38) : clamp((u - 0.4 - o * 0.6) / 0.5); const s = backOut(k, 1.6); return { pts: scaleAbout(pb.pts, centroid(pb.pts), s), on: k > 0, c: pb.c, a: pb.a }; }
+    if (growB) { const k = via ? clamp((u - 0.56 - o * 0.6) / 0.38) : clamp((u - 0.4 - o * 0.6) / 0.5); const s = backOut(k, 1.6); return { pts: scaleAbout(pb.pts, centroid(pb.pts), s), on: k > 0, c: pb.c, a: pb.a }; }
     if (pa.on) return { ...pa, on: false };
     return pa;
   });

@@ -59,3 +59,50 @@ Self-score: style 7.5 · concept 7 · motion 6.5 · design 7 · finish 6.5 · so
   2. In the factory → apartment via stage, the chimney shade facet travelled outside the circle as a dark-red bracket. *Fixed: shade facets collapse/grow through the via circle.*
   3. The screen-reveal roundrect shows stepped bands under 4-sample blur. The bid section is still compositionally static for ~3 s. The commas are clipped by the odometer's window mask. The confetti strobes into dotted lines.
 - I cannot listen to the mix; sync was checked with onset analysis (visual hits land 0–1 frame after the audio onsets).
+
+## Independent review #1 (fresh sub-agent; it saw only `video.mp4`, the Style / Output / Creative seed / Signature sections and the rubric's jury prompt)
+| style_fidelity | concept_wow | motion_craft | design_typography | finish_texture | sound_sync | technical |
+|---|---|---|---|---|---|---|
+| 6 | 6 | 5 | 6 | 6 | 6 | 7 |
+
+**Priority answers:** concept_wow was **not** ≥ 7, and 成交 did **not** read as a real climax. The price and premium were already final at 9.87 s, the gavel struck air, the shake rendered as a double exposure, and the stamp was small, in a corner, and collided with a digit. Other critical items:
+- the rolling columns smeared into solid red blocks, and the commas were clipped;
+- echo trails on the tags, paddles and premium text;
+- the HUD sat outside the 6 % margin during the camera push;
+- the tags and paddles were unreadable on a phone;
+- only 4 truly silent frames before the hit;
+- video bitrate 20.02 Mb/s, just over the cap.
+
+## Round 2 — what changed (rubric step 2: critical issues and top-impact fixes first)
+R1 is kept as `versions/r1/` (video, cover and source).
+1. **成交 rebuilt as one strike.**
+   - The last bid now lands on the impact frame (300): ¥2,120,000 → ¥2,180,000 and +112 % → +118 % happen on the hit, and the label flips 当前价 → 成交价, LIVE → 竞价结束.
+   - The gavel enters raised and fully in frame, rises (2 f), holds with a 2 px tremble (2 f), and swings in 2 f with an analytic smear.
+   - Its band lands on the cap line of the digits. The price squashes 0.85 high × 1.08 wide from the baseline and rebounds.
+   - The shake is real, constant within each frame, on frames 300–303 (+18/−12/+8/−3 px). A brand-red 35 % wash plays for 2 frames, plus a gold flash, shockwave and burst.
+   - The gavel lifts out. At 10.30 a **centre-screen 成交 seal (Ø ≈ 520 px, −8°)** drops from 1.6× to 1.0 in 4 frames with a 6 % undershoot, over the dimmed price. 溢价 +118 % drops under it as a solid red pill. The seal holds about 0.65 s, then its ring opens the paper iris.
+2. **Silence**: 6 frames of true digital silence (9.800–9.998 s), applied after mastering so no reverb tail leaks in. The hit layers are louder, the bid bed is lighter (kick −2.5 dB, clap −2 dB, bid blips −3 dB), and the proof and end sit about 3–7 dB under the bid bed.
+3. **Odometer**:
+   - Blur is 0.5 × velocity, capped at 46 px, and minimum roll time is 0.12 s, so digits stay legible.
+   - ¥ and commas are drawn outside the window mask.
+   - ¥1,000,000 起拍价 holds 6.3–7.0 s before the first bid.
+   - Discrete UI state (counters, premium, labels) uses frame-centre time, so there are no blended text echoes.
+4. **Paddles**: 6 solid #E8202A discs (Ø 92 px, white 出价 at 30 px, handle stub). Each pops in inside the safe area, arcs to its column and morphs circle → digit over the last 10 frames, landing on the bid.
+5. **Clean via-circle**:
+   - Every A → circle → B now holds a geometrically clean circle for the middle 12 % (about 2.5 frames), with a 12 % squash on the circle beat.
+   - Circle ↔ shape correspondence is radial (each vertex rides its own ray), so the saw-tooth roof grows out instead of crumpling.
+   - Matched sub-parts shrink to specks through the circle. Shade facets collapse and grow instead of travelling outside it.
+   - Fills use nonzero winding with reversed holes, so a fold can never punch a hole.
+6. **Hook**: the logo-gavel is 240 px (was 150) and arcs in from frame-left, visible and spinning on frame 0. The grey dot is 168 px. The music bed starts on the tap.
+7. **Bracelet & tags**: thinner ring (inner/outer 0.74), a two-tone ivory gradient and a soft specular that sweeps along the ring (the clip-art star is gone). Tags are 196 × 82 with 27 px 起拍价 and 20 px category.
+8. **HUD** is drawn in screen space at 125 px left/right margins and is unaffected by the camera push.
+9. **Proof**:
+   - Each figure group (prefix + number + unit) is centred on its column axis, with the descriptor centred below.
+   - ▲ is pinned 12 px off the number's top-right.
+   - % is visible during the 92 count.
+   - The complete row holds about 0.58 s.
+10. **End**:
+    - Converge → logo at 13.30 (was 13.60); the lockup is complete by about 13.9, so the hold is about 1.1 s.
+    - The lockup is centred on the frame axis. The gap from the lockup to the slogan is about 110 px.
+    - Shine sweep at 14.3. The end chord fades over the last 0.9 s.
+11. Encode capped at 18 Mb/s. Motion blur is 8 sub-samples (was 4). The seeded RNG is hashed, so the confetti no longer lines up in a column.

@@ -15,7 +15,7 @@ cu = json.load(open(os.path.join(HERE, 'cues.json')))
 FR = 1 / 30
 BEAT = cu['beat']; A0 = cu['anchor']
 m = mg.Mix(15.0, bpm=cu['bpm'], anchor=A0)
-m.group('music').level = -21.0
+m.group('music').level = -19.5
 N = lambda s: midi(s) if isinstance(s, str) else s
 
 # ------------------------------------------------------------------ harmony (one table drives arp, pulse, pads, tonal SFX)
@@ -46,7 +46,7 @@ arp2 = m.track('arp_hi', level=-29, sends={'delay': -10}, pan=-0.2)
 t = A0 + 2 * BEAT / 4 * 0   # start on the downbeat after the tap
 k = 0
 while t < 9.8 - 1e-6:
-    if t >= cu['hook']['tap'] - 1e-6:
+    if t >= 0.95:
         c = tones(t, 1) + [tones(t, 2)[0]]
         pat = [0, 2, 4, 5, 3, 1, 2, 4]
         n = c[pat[k % 8] % len(c)]
@@ -57,7 +57,6 @@ while t < 9.8 - 1e-6:
             if t >= 8.8: arp2.add(synth.pluck(c[(pat[k % 8] + 2) % len(c)] + 12, 0.08, 0.6, 'bell'), t + 0.075)
     t = round(t + BEAT / 4, 6); k += 1
 arp.automate('lpf', [(0, 1500), (2.8, 2200), (5.2, 3000), (7.6, 4200), (9.75, 9000), (10, 3000), (15, 2500)])
-arp.automate('gain', [(0, 0), (6.3, -2), (9.7, -1)])
 # proof: lighter 8th arp, then the end chord as a slow glock spread
 for i in range(14):
     tt = HIT + 0.9 + i * BEAT / 2
@@ -66,7 +65,7 @@ for i in range(14):
 
 # low pulse: 8th-note bass on the root, from the first morph to the silence
 pulse = m.track('pulse', level=-21, pan=0.0)
-t = cu['hook']['tap']
+t = 1.0
 while t < 9.8 - 1e-6:
     r = N(ROOT[chord(t)])
     pulse.add(synth.bass(r, 0.22, 0.95 if abs(((t - A0) / BEAT) % 1) < 1e-3 else 0.7, 'analog'), t)
@@ -75,8 +74,8 @@ for tt, rr, d in [(HIT, 'A#1', 1.15), (11.2, 'C2', 1.15), (12.4, 'A1', 1.15), (1
     pulse.add(synth.bass(N(rr), d, 0.8, 'sub'), tt)
 
 # drums: soft kick from bar 1, full groove in the bid, snare roll into the silence
-kick = m.track('kick', level=-22.5)
-clap = m.track('clap', level=-29, sends={'room': -10})
+kick = m.track('kick', level=-20)
+clap = m.track('clap', level=-27, sends={'room': -10})
 hats = m.track('hats', level=-31, pan=0.15)
 for b in range(40):
     tt = A0 + b * BEAT
@@ -101,7 +100,7 @@ for a, b, c in SEG:
     if a < 2.8: continue
     d = min(b, SIL0) - a if a < SIL0 else b - a
     pad.add(synth.pad([N(x) + 12 for x in CH[c][1:]], d + 0.05, 0.6 if c != 'Dmaj9' else 0.9, 'warm' if c != 'Dmaj9' else 'strings'), a)
-pad.automate('gain', [(0, -6), (5.0, -4), (9.6, -1), (10.0, -6), (13.2, -3), (14.1, -4), (15, -16)])
+pad.automate('gain', [(0, -6), (5.0, -4), (9.6, 0), (10.0, -5), (13.5, -2), (15, 0)])
 
 # ------------------------------------------------------------------ sound design (sync points = the visual events)
 def tone_at(t, i=-1, oct=1): return name(hi(t, i, oct))
@@ -144,7 +143,7 @@ for j, tb in enumerate(BIDS):
         m.sfx(sfx.whoosh(0.3, 'swish', direction=(-1, 1)[j % 2], peak=0.8, seed=40 + j), at=tb - 0.08, gain=-15, pan=(-0.5, 0.5)[j % 2])
     else:
         m.sfx(sfx.pop('soft', pitch=1.2 + 0.03 * j), at=tb - FR, gain=-13, pan=(-0.3, 0.3)[j % 2])
-    m.sfx(sfx.blip(name(hi(tb, j % 5, 2)), 'tri', dur=0.05, glide=1.2), at=tb, gain=-15 + 0.25 * j, verb=-14)
+    m.sfx(sfx.blip(name(hi(tb, j % 5, 2)), 'tri', dur=0.05, glide=1.2), at=tb, gain=-12 + 0.25 * j, verb=-14)
     # mechanical odometer ticks: one per digit that rolls past, spread over the roll
     a, b = P[j], P[j + 1]; nd = 0
     for kk in range(7):
@@ -162,24 +161,22 @@ m.sfx(sfx.riser(SIL0 - 8.6, 'noise', end='cut', seed=5), at=SIL0, gain=-12)
 m.mute(SIL0, SIL1 - SIL0)
 m.group('sfx').region('mute', SIL0, SIL1 - SIL0 - 0.004)
 H0 = HIT - 0.004
-m.sfx(drums.woodblock('block', 1.0), at=H0, gain=3, verb=-10)
-m.sfx(sfx.click('wood'), at=H0, gain=2)
-m.sfx(sfx.impact('punch', size=1.4), at=H0, gain=2)
-m.sfx(sfx.impact('cinematic', size=1.2), at=H0, gain=-2)
-m.sfx(sfx.boom(2.6, 44), at=H0, gain=1)
+m.sfx(drums.woodblock('block', 1.0), at=H0, gain=0, verb=-10)
+m.sfx(sfx.click('wood'), at=H0, gain=0)
+m.sfx(sfx.impact('punch', size=1.3), at=H0, gain=-1)
+m.sfx(sfx.boom(2.4, 44), at=H0, gain=-2)
 m.sfx(sfx.sub_drop(1.2, 90, 32), at=H0, gain=-8)
-m.sfx(fm.bell(N('D6'), 2.6, 0.9, 'bell').loud(-18), at=H0 + 0.01, gain=1, verb=-6)
+m.sfx(fm.bell(N('D6'), 2.6, 0.9, 'bell').loud(-18), at=H0 + 0.01, gain=-2, verb=-6)
 m.sfx(fm.bell(N('A6'), 2.0, 0.7, 'bell').loud(-18), at=H0 + 0.01, gain=-8, verb=-6)
 m.sfx(sfx.sparkle(1.0, key='D', lo=90, hi=106, seed=7), at=HIT + 0.05, gain=-12)
-m.sfx(sfx.stamp('seal'), at=cu['stamp'] - FR, gain=0)
-m.sfx(sfx.impact('thud'), at=cu['stamp'] - FR, gain=-6)
+m.sfx(sfx.stamp('seal'), at=cu['stamp'] - FR, gain=-2)
 m.sfx(sfx.stamp('rubber'), at=cu['stamp'] - FR, gain=-7)
 # PROOF: the seal opens (whoosh), circles fly out, each count-up step ticks, ▲ pops
 m.sfx(sfx.whoosh(0.6, 'air', direction=0, peak=0.45, seed=51), at=cu['wipes']['paper'] + 0.25, gain=-10)
-steps = [0.22, 0.11, 0.11, 0.13, 0.18]
+steps = [0.24, 0.13, 0.13, 0.16, 0.22]
 seqlen = [4, 2, 5]
 for fi, tf in enumerate(cu['figures']):
-    m.sfx(sfx.swish(0.25, direction=1, seed=60 + fi), at=tf - 0.40, gain=-15, pan=-0.4 + 0.4 * fi)
+    m.sfx(sfx.swish(0.25, direction=1, seed=60 + fi), at=tf - 0.36, gain=-15, pan=-0.4 + 0.4 * fi)
     tt = tf
     for s in range(seqlen[fi]):
         if s > 0: tt += steps[s]
@@ -188,7 +185,7 @@ for fi, tf in enumerate(cu['figures']):
     m.sfx(sfx.pop('mouth', pitch=1.3), at=tt + 0.03, gain=-12, pan=-0.4 + 0.4 * fi)
 # END: numbers become circles and converge (whoosh + arriving pops), the gavel lands into the logo on the downbeat
 m.sfx(sfx.whoosh(0.6, 'soft', direction=-1, peak=0.65, seed=71), at=cu['converge'] + 0.45, gain=-11)
-arr = [cu['converge'] + 0.12 + 0.03 * g + 0.28 for g in range(7)]
+arr = sorted(cu['converge'] + 0.2 + 0.035 * (fi * 3 + ci) + 0.34 for fi, n in enumerate([3, 2, 2]) for ci in range(n))
 for i, ta in enumerate(arr): m.sfx(sfx.pop('bubble', pitch=0.8 + 0.06 * i), at=ta - FR, gain=-14)
 LL = cu['logoLand'] - FR
 m.sfx(sfx.whoosh(0.4, 'swish', direction=-1, peak=0.8, seed=81), at=LL - 0.06, gain=-12, pan=0.3)
@@ -198,14 +195,6 @@ for i, n in enumerate(['D5', 'F#5', 'A5', 'C#6', 'E6']):
     m.sfx(fm.bell(N(n), 1.6, 0.5, 'glock').loud(-18), at=cu['title'] + 0.06 * i, gain=-17, pan=-0.3 + 0.15 * i, verb=-8)
 m.sfx(sfx.sparkle(0.9, key='D', lo=96, hi=110, seed=11), at=cu['shine'] + 0.25, gain=-17)
 
-# dynamics: the bid bed climbs, the proof and end sit well under the hit (LRA up, the 成交 transient stands out)
-m.group('music').automate('gain', [(0, -1), (6.3, -1), (9.75, 1), (10.0, -4), (10.5, -9), (13.2, -9), (13.35, -6), (15, -8)])
-OUT = os.path.join(HERE, 'out', 'audio.wav')
-m.export(OUT, lufs=-14, tp=-1.5, analyze=False)
-import soundfile as sf
-x, sr = sf.read(OUT, dtype='float64'); n = np.arange(len(x)) / sr
-g = np.ones(len(x)); a0, a1 = SIL0 - 0.012, SIL0; g[(n >= a0) & (n < a1)] = 1 - (n[(n >= a0) & (n < a1)] - a0) / 0.012; g[(n >= SIL0) & (n < SIL1 - 0.002)] = 0
-x = x * g[:, None]; sf.write(OUT, x, sr, subtype='PCM_24')
-res = mg.analyze(OUT); mg.spectrogram(OUT, os.path.join(HERE, 'out', 'audio_spec.png'))
+res = m.export(os.path.join(HERE, 'out', 'audio.wav'), lufs=-14, tp=-1.5, spectrogram=os.path.join(HERE, 'out', 'audio_spec.png'))
 print({k: res.get(k) for k in ('duration', 'lufs', 'true_peak', 'stereo_corr', 'longest_gap', 'warnings')})
 print('align', mg.hit_alignment(os.path.join(HERE, 'out', 'audio.wav'), [cu['hook']['tap'], 1.6, 2.8, 4.0, 5.2, HIT, cu['stamp'], cu['logoLand']]))

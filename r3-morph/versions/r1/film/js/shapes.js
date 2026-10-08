@@ -63,16 +63,13 @@ export function buildShapes() {
     SH.apartment.parts.forEach((p, i) => { if (parts[i]) { p.lit = parts[i].lit; p.cell = parts[i].cell; } });
   }
   // JADE BRACELET — the ring: the circle with a hole (white jade, gold-white glint, no green)
-  { const body = circ(0, 0, 214, NB), hole = circ(0, 0, 158, NH);
+  { const body = circ(0, 0, 214, NB), hole = circ(0, 0, 150, NH);
     const arcBand = (r0, r1, a0, a1) => { const n = 24, o = [];
       for (let i = 0; i <= n; i++) { const a = (a0 + ((a1 - a0) * i) / n) * Math.PI / 180, w = Math.sin((Math.PI * i) / n); const rr = r1 - (r1 - r0) * (0.5 + 0.5 * w); o.push([Math.cos(a) * r1, Math.sin(a) * r1]); }
       for (let i = n; i >= 0; i--) { const a = (a0 + ((a1 - a0) * i) / n) * Math.PI / 180, w = Math.sin((Math.PI * i) / n); const rr = lerp1(r1, r0, w); o.push([Math.cos(a) * rr, Math.sin(a) * rr]); }
       return 'M' + o.map((p) => p.join(',')).join('L') + 'Z'; };
     const star = (cx, cy, r) => { const o = []; for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4 - Math.PI / 2, rr = i % 2 ? r * 0.2 : r; o.push([cx + rr * Math.cos(a), cy + rr * Math.sin(a)]); } return rpoly(o, 1.5); };
-    const spec = (a, r, l, w) => { const o = [], ca = Math.cos(a), sa = Math.sin(a);   // ellipse on the ring, long axis along the tangent
-      for (let i = 0; i < 24; i++) { const t = (2 * Math.PI * i) / 24, x = l * Math.cos(t), y = w * Math.sin(t); o.push([r * ca - sa * x + ca * y, r * sa + ca * x + sa * y]); }
-      return 'M' + o.map((p) => p.join(',')).join('L') + 'Z'; };
-    const parts = [part(arcBand(166, 206, 196, 262), C.jadeHi, 0.95), part(arcBand(162, 211, 18, 112), C.jadeShade, 1), part(spec(-45 * Math.PI / 180, 188, 34, 9), '#FFFFFF', 0.9)];
+    const parts = [part(arcBand(162, 204, 196, 262), C.jadeHi, 0.95), part(arcBand(156, 210, 18, 112), C.jadeShade, 1), part(star(150, -152, 46), C.glint, 1)];
     SH.bracelet = makeShape(body, [hole], parts, C.jade);
   }
   // GAVEL — the logo's own gavel (head ∪ handle) + the two bands as sub-parts, gold

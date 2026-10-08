@@ -1,23 +1,124 @@
 {
- "bpm": 100, "beat": 0.6, "anchor": 0.4, "fps": 30, "duration": 15.0,
+ "bpm": 100,
+ "beat": 0.6,
+ "anchor": 0.4,
+ "fps": 30,
+ "duration": 15.0,
  "_grid": "beat k at 0.4 + 0.6k; bar lines 0.4 / 2.8 / 5.2 / 7.6 / 10.0 / 12.4 / 14.8",
- "hook": { "tap": 0.4, "inflated": 0.95, "copy": 0.62 },
+ "hook": {
+  "tap": 0.4,
+  "inflated": 0.85,
+  "copy": 0.55
+ },
  "morphs": [
-  { "a": "circle",    "b": "factory",   "t0": 1.00, "t1": 1.60 },
-  { "a": "factory",   "b": "apartment", "t0": 2.10, "t1": 2.80, "via": true },
-  { "a": "apartment", "b": "bracelet",  "t0": 3.30, "t1": 4.00, "via": true },
-  { "a": "bracelet",  "b": "gavel",     "t0": 4.50, "t1": 5.20, "via": true },
-  { "a": "gavel",     "b": "circle2",   "t0": 5.42, "t1": 5.72 },
-  { "a": "circle2",   "b": "capsule",   "t0": 5.72, "t1": 6.02 }
+  {
+   "a": "circle",
+   "b": "factory",
+   "t0": 0.85,
+   "t1": 1.6
+  },
+  {
+   "a": "factory",
+   "b": "apartment",
+   "t0": 2.1,
+   "t1": 2.8,
+   "via": true
+  },
+  {
+   "a": "apartment",
+   "b": "bracelet",
+   "t0": 3.3,
+   "t1": 4.0,
+   "via": true
+  },
+  {
+   "a": "bracelet",
+   "b": "gavel",
+   "t0": 4.5,
+   "t1": 5.2,
+   "via": true
+  },
+  {
+   "a": "gavel",
+   "b": "circle2",
+   "t0": 5.42,
+   "t1": 5.72
+  },
+  {
+   "a": "circle2",
+   "b": "capsule",
+   "t0": 5.72,
+   "t1": 6.02
+  }
  ],
- "land": { "factory": 1.60, "apartment": 2.80, "bracelet": 4.00, "gavel": 5.20 },
- "wipes": { "ink": 2.45, "red": 3.65, "screen": 6.02, "paper": 10.72 },
- "screenOpen": 6.30,
- "bids": [6.40, 7.00, 7.60, 7.90, 8.20, 8.50, 8.65, 8.80, 8.95, 9.10, 9.25, 9.325, 9.40, 9.475, 9.55, 9.625, 9.70],
- "prices": [1050000, 1120000, 1200000, 1280000, 1360000, 1450000, 1530000, 1600000, 1680000, 1750000, 1820000, 1880000, 1940000, 1990000, 2060000, 2120000, 2180000],
- "silence": [9.80, 10.0],
- "gavelRise": 9.80, "gavelHold": 9.90, "gavelSwing": 9.95,
- "hit": 10.0, "stamp": 10.10, "premiumTag": 10.15,
- "figures": [10.95, 11.20, 11.50],
- "converge": 12.75, "logoLand": 13.60, "title": 13.66, "shine": 14.15
+ "land": {
+  "factory": 1.6,
+  "apartment": 2.8,
+  "bracelet": 4.0,
+  "gavel": 5.2
+ },
+ "wipes": {
+  "ink": 2.45,
+  "red": 3.65,
+  "screen": 6.02,
+  "paper": 10.95
+ },
+ "screenOpen": 6.3,
+ "bids": [
+  7.0,
+  7.6,
+  7.9,
+  8.2,
+  8.5,
+  8.65,
+  8.8,
+  8.95,
+  9.1,
+  9.25,
+  9.325,
+  9.4,
+  9.475,
+  9.55,
+  9.625,
+  9.7,
+  10.0
+ ],
+ "prices": [
+  1050000,
+  1120000,
+  1200000,
+  1280000,
+  1360000,
+  1450000,
+  1530000,
+  1600000,
+  1680000,
+  1750000,
+  1820000,
+  1880000,
+  1940000,
+  1990000,
+  2060000,
+  2120000,
+  2180000
+ ],
+ "silence": [
+  9.8,
+  10.0
+ ],
+ "gavelRise": 9.8,
+ "gavelHold": 9.867,
+ "gavelSwing": 9.933,
+ "hit": 10.0,
+ "stamp": 10.3,
+ "premiumTag": 10.0,
+ "figures": [
+  11.15,
+  11.35,
+  11.55
+ ],
+ "converge": 12.7,
+ "logoLand": 13.3,
+ "title": 13.3,
+ "shine": 14.3
 }
