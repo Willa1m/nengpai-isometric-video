@@ -1,5 +1,7 @@
 # 领拍 LINGPAI「你要的，这里有」— 20 s collage / cut-out film
 
+Final file: `collage/video.mp4` (round 2). Round-1 film = commit `collage film round 1` in git history. Reviews: `reviews/review_r1.md`, `reviews/review_r2.md`.
+
 ## Concept
 A buyer's three handwritten wishes are slapped onto a kraft page, and hands answer them with an avalanche of real disposal assets (有货) until the page turns into a detective "matching board" where blue strings shoot from each wish, and then from a crowd of anonymous buyers, to the right asset (能配). The board rips into the two engines (Shenzhen intermediary network / self-media matrix) and a page flip lands on 「你要的资产，领拍帮你配上」 with the 领拍 | 阿里资产 lockup.
 
@@ -71,3 +73,41 @@ Top weaknesses after round 1:
 - Tag wording: 设备 / 厂房 / 写字楼 / 住宅 / 家具 / 型材 / 洗涤设备 plus 集装箱房, 整厂 (glass factory, written on the paper patch that covers its sign) and 地效翼船. 「有货」 was added as a single slammed key word (it is the brief's own message word, not a new claim).
 - Numbers shown: 1000+ (精准买家, from 1000+ 精准存量客户), 100+ 线下合作渠道, 上千件标的 — all from case-data.txt.
 - The colour LINGPAI wordmark is used in the lockup because its horizontal proportion matches the 阿里资产 logo; both are set at matching visual height on one clean flat white panel.
+
+
+---
+
+# Round 2
+
+## Independent review scores
+| round | style | concept | motion | design/type | finish | sound/sync | technical |
+|---|---|---|---|---|---|---|---|
+| R1 (jury) | 6 | 6 | 6 | 5 | 6 | 7 | 8 |
+| R2 (new jury) | R2_SCORES |
+
+## Fixes applied (by the R1 jury's priority)
+| # | jury fix | what was done |
+|---|---|---|
+| C1 / F1 | End card read as a typed subtitle after an empty page | 8-step corner peel from bottom-right (fold line reflected flap with a newsprint back and a fold shadow); the headline is **slapped as torn paper strips** (130 % → 115 % → 96 % → 100 %, paper-dust puff), 配上 as two orange tiles slammed with a stamp thunk, boiling blue marker underline, matching-string pin; lockup panel taped on; small line slapped as a thin strip. No typed headline, no empty page (first strip lands while the peel finishes). Hold 18.17–20.0 = 1.83 s with tape corners lifting, pin wobble, 6 fps jitter on the strips, grain. |
+| C2 / F2 | Rounded display font | ZCOOL QingKe HuangYou removed everywhere. Band: Noto Sans SC Black condensed to 82 %, −12° diagonal, black under-bar, tears in over 3 steps. Ransom "news" chips now Noto Serif SC Black. 匹配 stamp at 85 % ink with grunge. |
+| C3 / F3 | Clip-art hand and crowd | No photographic hand or crowd source is reachable from this sandbox (network allows GitHub/npm only; Wikimedia/Met/LoC blocked), so photo cut-outs were not possible. Instead: hand redrawn with tapered knuckled fingers, key-light modelling, tendons, pinstripe suit and a **sepia mono halftone print layer** (reads as cut from an old magazine); buyers rebuilt with ears, shirt V + tie, three **big-headed** variants, dark lenses instead of "owl eyes", and a **separate hinged jaw on every bust that chatters** (2 replacement positions) while the strings fire; the front puppet is a **bowler-hat profile** with a hinged jaw and a shoulder/elbow-jointed **auction paddle marked 拍**. |
+| C4 | 卖 glyph anomaly | Root cause: the typewriter "key strike" scale was applied to the wrong character index at 24 cps. Fixed (only the newest character punches) — and the end subline is now a slapped strip, not typed. |
+| C5 / F6 | Clipped / occluded copy | 上千件标的 tiles re-spaced and kept below the band; camera framing on 1000+ 精准买家 keeps it fully in frame ≥ 1.2 s (11.33–12.42); 更多平台… label inside x ≤ 1805; fan tightened. The wish notes are still partly cropped by the left edge during the 1.24× push on the crowd (a deliberate camera move; the notes are background at that moment). |
+| C6 | Lockup off-centre | Root cause: the supplied 阿里资产 PNG has 203 px of transparent padding on the left. The lockup now centres on the logo's alpha bounding box (drawn from the original pixels, unaltered): rule exactly on x = 960, equal 74 px gaps, both logos 92 px tall. The lockup is drawn in screen space, so it never jitters or scales. |
+| F4 | Unreadable hero | Two string waves (10.67 / 11.33, 3 steps each, 3.4–4.2 px strings), constructivist cut-paper sunburst behind the crowd, only 3 匹配 stamps (machine, park, residential) + orange tick tags, unmatched photos washed back 34 % during the hero. |
+| F5 | Photo treatment | Halftone period 5.6 → 4.4 px and mix 0.42 → 0.30 (photos keep detail and colour); machine baked at 600 px and shown at ~40 % frame height; the glass-factory crop (trees + asphalt behind a patch) dropped (8 assets + craft remain, within the brief's 8–10); 30 distinct thumbnails (3 crops × 10 sources) instead of 10 repeated. |
+| F7 | Craft not a comic beat | 1.0 s Catmull-Rom swoop from off-frame left across the whole frame, path-aligned stretch (up to 128 %), 2 smear ghosts + cut-paper speed strips, POP with an 11-ray orange starburst + paper dust on the bar line (5.33), descending/ascending slide whistles + heavy whoosh + cork pop. |
+| F8 | Weak hook | Frame 0 already holds a torn blue diagonal, newsprint scrap, a stray photo, tapes, and the first note + hand entering; paper-dust puffs + camera shake on every note slap. |
+| F9 | Exits / act change / late stall | Exits now 5 steps (7.58–8.0), visible from the first step; act-change hit at 8.0 (camera snaps in 1.0 → 1.1, thud, pins); camera follows string 1 and pans to string 2; the engines page is kraft (matches the board); map pins pulse on 15.67 / 16.0 and a 5th card peeks in at 15.83. |
+
+## Round 2 check numbers (`film/work/check.sh`, `film/work/framediff.py`)
+| | measured |
+|---|---|
+| Duration / frames | 20.000 s, 600 frames |
+| Video | 1920×1080, 30 fps, H.264 High, yuv420p, 16.9 Mb/s, 41 MB (cap 16 Mb/s maxrate) |
+| Audio | AAC LC stereo 48 kHz 320 kb/s |
+| Loudness | −14.1 LUFS integrated (master −14.06), LRA 2.8 LU |
+| True peak | −2.1 dBTP on the delivered AAC (master −2.75) |
+| Black frames / static spans > 1 s | none / none (frame-difference plots `reviews/framediff_r1.png`, `framediff_r2.png`) |
+| Fonts | every glyph passes `document.fonts.check`; no rounded display face |
+| Compressed preview | 1080p CRF 23, 21.6 MB |
