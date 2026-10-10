@@ -83,7 +83,7 @@ Top weaknesses after round 1:
 | round | style | concept | motion | design/type | finish | sound/sync | technical |
 |---|---|---|---|---|---|---|---|
 | R1 (jury) | 6 | 6 | 6 | 5 | 6 | 7 | 8 |
-| R2 (new jury) | R2_SCORES |
+| R2 (new jury) | 6 | 6 | 6 | 6 | 7 | 6 (measured, not heard) | 9 |
 
 ## Fixes applied (by the R1 jury's priority)
 | # | jury fix | what was done |
@@ -111,3 +111,34 @@ Top weaknesses after round 1:
 | Black frames / static spans > 1 s | none / none (frame-difference plots `reviews/framediff_r1.png`, `framediff_r2.png`) |
 | Fonts | every glyph passes `document.fonts.check`; no rounded display face |
 | Compressed preview | 1080p CRF 23, 21.6 MB |
+
+## Round 2 beat changes (full cue sheet in `film/cues.json`)
+0.00 frame 0 already a collage (blue diagonal, scraps, tape) + note 1 entering · 0.33 / 1.00 / 1.67 note slaps with dust puffs · 2.67 drums + machine · 2.67–4.67 eight assets · 4.33–5.33 craft swoop, POP on the bar line · 5.50 band tears in, 5.83 / 6.17 / 6.50 phrases · 6.83 上千件标的 (千 punch 7.08) · 7.33 有货 · 7.58–8.0 everything torn / blown off · **8.0** act hit, pins · 8.67–9.33 string 1 + stamp · 9.33–10.0 string 2 + stamp · 10.25 photos washed back · 10.33 sunburst + crowd + puppet · **10.67** wave 1 · 11.25 1000+ 精准买家 · **11.33** wave 2 · 12.58 100+ 线下合作渠道 · 13.33 rip · 13.67 map · 14.0 labels · 14.33–15.33 cards · 15.67 / 16.0 pin pulses, 15.83 5th card · 16.17–16.83 corner peel · 16.67 / 17.0 headline strips · **17.33** 配上 · 17.67 lockup · 18.0 small line · 18.17–20.0 hold.
+
+## Honest self-assessment after round 2
+The second jury scored round 2 almost the same as round 1 (design 5 → 6, finish 6 → 7, technical 8 → 9, sound 7 → 6 by measurement). The structural problems from round 1 are fixed and verified: no subtitle-style text, no empty page, a centred and still lockup, no rounded font, no glyph anomaly. The film still sits at "solid template" level rather than high-end for these reasons, in order:
+1. **The figures are drawn, not photographic.** The canonical collage look comes from cut-up photographs and engravings. This sandbox could only reach GitHub and npm, so I could not source CC0 photos of hands or people, and the drawn hand and buyers still read as illustration or CG to an expert jury.
+2. **The hero is a web, not an icon.** Two waves of strings, a sunburst and the crowd are busy. The single unforgettable frame the jury asks for (the strings snapping into 「配」 or the P-mark) does not exist yet.
+3. **Copy collisions remain:**
+   - During the 1.24–1.3× pushes at 12.3–13.3 s, the wish notes and the end of 1000+ 精准买家 / 洗涤设备 are cropped at the frame edge.
+   - The card fan hides the last character of 小红书 and 视频号 for part of the hold.
+   - 有货 overlaps 企业资产 in the band for ~0.5 s.
+   - The flying craft lands partly under the band.
+
+Further jury notes not yet done: the mix is dense (LRA 2.8 LU) with little air above 4 kHz; stamps need an ink-splatter accent; the stray blue arrow annotation on the machine stays on screen until 12 s; grain and dust specks fall on the logo panel (the logo pixels themselves are drawn unaltered).
+
+## What I would do in a round 3
+- **Source real hands and figures.** Use CC0 photos of hands in 2 poses and 12–20 anonymised engraved or photo heads at 1.8× head scale, with the same halftone and scissor-edge pipeline. This needs network access to Wikimedia / Met Open Access, or the client could supply photos.
+- **Build the iconic hero beat.** After wave 2, pull back 0.5 s and let the strings snap into 「配」, hold 6 frames, then rip.
+- **Fix the type collisions.**
+  - Re-set the stats on their own torn strips inside the safe area, with no crop-push.
+  - Widen the card fan to about 22° with 180 px offsets.
+  - Move 有货 clear of the band.
+  - Land the craft on the top layer.
+  - Remove the arrow annotation.
+- **Polish the mix and the end card.** Duck the bed 3–4 dB under hits (target LRA ~6 LU), add a +3 dB shelf above 6 kHz, and let the button chord ring to 19.6 s. Exclude the grain and dust layer from the logo panel.
+
+## Decisions made without asking (round 2)
+- No third full-resolution render. The brief allows one per round and both rounds are used; the remaining jury fixes are listed above for a round 3.
+- The glass-factory photo was dropped from the film. Its usable framing is the sign it must hide, and the jury read the covered version as "trees and asphalt". The brief's 8–10 assets are met with 8 assets plus the craft.
+- The 1000+ / 100+ count-ups start from about 60 % (600 → 1000, 60 → 100) as the brief asks. Intermediate values are display-only and never shown as claims.
