@@ -3,7 +3,7 @@
  "beat": 0.6666667,
  "bar": 2.6666667,
  "step_fps": 12,
- "note": "every visual hit sits on the 12 fps grid and on the 90 bpm 16th grid (1/6 s). Bars: 0, 2.667 (drums in), 5.333, 8.0 (board), 10.667 (hero burst), 13.333 (rip), 16.0, 18.667.",
+ "note": "every visual hit sits on the 12 fps grid and on the 90 bpm 16th grid (1/6 s) or its 8th-triplet subdivision (1/12 s). Bars: 0, 2.667 (drums in), 5.333 (craft POP), 8.0 (board), 10.667 (hero burst), 13.333 (rip), 16.0, 18.667. r2: craft swoop 4.33-5.33, exits 7.58-8.0, two string waves 10.67 / 11.33, peel flip 16.17-16.83, end strips 16.67 / 17.0 / 17.33, lockup 17.67, small line 18.0, hold 18.17-20.0",
  "notes": [
   0.3333333,
   1.0,
@@ -26,11 +26,10 @@
   "a_furniture": 4.1666667,
   "a_profiles": 4.3333333,
   "a_laundry": 4.5,
-  "a_container": 4.6666667,
-  "a_factory": 4.8333333
+  "a_container": 4.6666667
  },
  "craft": [
-  4.9166667,
+  4.3333333,
   5.3333333
  ],
  "band": 5.5,
@@ -44,10 +43,10 @@
   6.9166667
  ],
  "thousand": 6.8333333,
- "thousand_punch": 7.25,
- "youhuo": 7.5,
+ "thousand_punch": 7.0833333,
+ "youhuo": 7.3333333,
  "clear": [
-  7.75,
+  7.5833333,
   8.0
  ],
  "pins": 8.0,
@@ -75,8 +74,8 @@
   11.6666667,
   12.0
  ],
- "buyers": 11.3333333,
- "channels": 12.1666667,
+ "buyers": 11.25,
+ "channels": 12.5833333,
  "rip": 13.3333333,
  "map": 13.6666667,
  "map_pins": [
@@ -92,16 +91,23 @@
   15.3333333
  ],
  "flip": [
-  16.3333333,
-  16.6666667
+  16.1666667,
+  16.8333333
  ],
- "end_line1": 16.8333333,
- "end_line2": 17.3333333,
- "peishang": 17.8333333,
- "lockup": 18.1666667,
- "small_line": 18.5,
+ "end_line1": 16.6666667,
+ "end_line2": 17.0,
+ "peishang": 17.3333333,
+ "lockup": 17.6666667,
+ "small_line": 18.0,
  "hold": [
-  18.8333333,
+  18.1666667,
   20.0
- ]
+ ],
+ "dim": 10.25,
+ "burst2": 11.3333333,
+ "pulses": [
+  15.6666667,
+  16.0
+ ],
+ "card5": 15.8333333
 }

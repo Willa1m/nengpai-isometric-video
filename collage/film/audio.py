@@ -88,10 +88,12 @@ for i, (name, t) in enumerate(C['assets'].items()):
     S(sfx.typing(n_keys=3, rate=12, kind='typewriter', seed=60 + i), t + 1 / 12, -12, pan, hit=False)   # the tag gets typed
     S(sfx.tape_rip(0.12, seed=70 + i), t + 1 / 12, -15, pan, hit=False)
 # the wing-in-ground craft: cartoon whoosh in + POP + boing
-s = sfx.whoosh(0.5, 'heavy', direction=-1, peak=0.85, seed=81)
-S(s, C['craft'][1] - 0.05, -2, -0.3, hit=False)
-s = sfx.slide_whistle(up=True, dur=0.38) if hasattr(sfx, 'slide_whistle') else sfx.swish(0.3)
-S(s, C['craft'][0] + 0.05, -9, 0.2, hit=False)
+s = sfx.whoosh(1.0, 'heavy', direction=1, peak=0.9, seed=81)
+S(s, C['craft'][1] - 0.06, -2, 0.2, hit=False)
+s = sfx.slide_whistle(up=False, dur=0.45)
+S(s, C['craft'][0] + 0.3, -10, -0.4, hit=False)
+s = sfx.slide_whistle(up=True, dur=0.4)
+S(s, C['craft'][1] - 0.3, -9, 0.4, hit=False)
 S(sfx.cork_pop(), C['craft'][1], 3, 0.25)
 S(sfx.boing(pitch=1.2, dur=0.45), C['craft'][1] + 1 / 12, -9, 0.25, hit=False)
 # constructivist band tears in, phrases slam, avalanche of thumbnails, 上千件 chips, 有货
@@ -112,6 +114,7 @@ s = sfx.whoosh(0.45, 'air', direction=1, peak=0.6, seed=124)
 S(s, C['clear'][0] + 0.12, -6, 0.3, hit=False)
 
 # ------------------------------------------------------------------ 能配: the matching board
+S(sfx.impact('thud', size=1.2, seed=125), C['pins'], 0, 0.0)          # act change: the board snaps into a pin board
 for i in range(7):                                   # push pins drop in (2 per step)
     S(sfx.click('hard').pitch(i * 0.7 - 2), C['pins'] + i / 12, -8, -0.5 + i * 0.16, hit=(i == 0))
 S(sfx.pen('marker', 0.25), C['stamp1'] - 0.25, -9, -0.1, hit=False)
@@ -137,8 +140,25 @@ HITS.append(C['burst'])
 S(drums.crash(0.9).loud(-18), C['burst'], -1, 0.0, hit=False)
 S(sfx.impact('punch', seed=210), C['burst'], 0, 0.0, hit=False)
 S(sfx.sub_drop(0.8), C['burst'], -6, 0.0, hit=False)
-for i, t in enumerate(C['mini_stamps']):
-    S(sfx.stamp('rubber', seed=220 + i), t, -1 + i * 0.5, [-0.3, 0.5, 0.6, 0.7][i])
+S(sfx.paper('slide', 0.3, seed=219), C['dim'], -9, 0.2, hit=False)
+S(sfx.stamp('rubber', seed=220), C['mini_stamps'][0], 1, 0.6)
+for i, t in enumerate(C['mini_stamps'][1:]):
+    S(sfx.sticker_slap(seed=221 + i), t, -3, [0.3, 0.6, 0.2][i])
+# second wave of strings: another strummed twang chord, an octave up
+ch2 = sorted(f.chord_at(C['burst2']))
+for k in range(3):
+    for j, n in enumerate(ch2[:4]):
+        bend = np.concatenate([np.linspace(1.5, 0, int(0.06 * SR)), np.zeros(SR)])
+        S(pluck.guitar(int(n) - 12 + 12 * (k % 2), 0.9, 0.85, 'steel', bend=bend, seed=260 + k * 4 + j).loud(-21), C['burst2'] + k / 12 + j * 0.012, -5 - k, -0.5 + j * 0.35, hit=False)
+HITS.append(C['burst2'])
+# the crowd chatters (muted-horn babble on the open-jaw steps)
+babble = m.track('babble', level=-31, sends={'room': -10}, lp=2000, group='sfx')
+rr = np.random.default_rng(77)
+cb = sorted(f.chord_at(C['burst']))
+tt = C['burst']
+while tt < C['channels'] - 0.05:
+    babble.add(fm.brass(int(cb[int(rr.integers(0, len(cb)))]) + 12 * int(rr.integers(0, 2)), 0.07, 0.6), tt + rr.uniform(-0.005, 0.005))
+    tt += 2 / 12
 # the big-headed buyer talks: muted-horn blips on the jaw flaps (the puppet's voice)
 horn = m.track('horn', level=-26, sends={'plate': -12}, lp=2400, group='sfx')
 for t, n in zip(C['jaw'], ['C5', 'E5', 'D5', 'G4']):
@@ -171,6 +191,10 @@ for i in range(16):
 S(sfx.typing(n_keys=8, rate=12, kind='typewriter', seed=310), C['map_label'], -6, -0.4)
 for i in range(7):
     S(sfx.sticker_slap(seed=320 + i), C['matrix'] + i / 12, -9, 0.5, hit=False)
+for i, t in enumerate(C['pulses']):
+    S(fm.bell(['A5', 'C6'][i], 0.4, 0.5, 'glock').loud(-20), t, -8, -0.5)
+s = sfx.swish(0.25, direction=-1, seed=345)
+S(s, C['card5'] - 0.04, -10, 0.85, hit=False)
 for i, t in enumerate(C['cards']):
     s = sfx.swish(0.22, direction=-1, seed=330 + i)
     S(s, t - 0.04, -6, 0.7, hit=False)
@@ -179,20 +203,21 @@ for i, t in enumerate(C['cards']):
     S(sfx.typing(n_keys=3, rate=12, seed=350 + i), t + 1 / 12, -12, 0.5, hit=False)
 
 # ------------------------------------------------------------------ END CARD
-s = sfx.whoosh(0.5, 'cloth', direction=-1, peak=0.6, seed=400)
-S(s, C['flip'][0] + 0.18, -3, -0.2, hit=False)
-S(sfx.paper('flip', 0.35, seed=401), C['flip'][1], -1, -0.1)
-for i in range(6):
-    S(sfx.sticker_slap(seed=410 + i), C['end_line1'] + i / 12, -12, -0.3 + i * 0.12, hit=(i == 0))
-for i in range(4):
-    S(sfx.sticker_slap(seed=420 + i), C['end_line2'] + i / 12, -12, -0.3 + i * 0.12, hit=(i == 0))
-paper_slap(C['peishang'], gain=3, pan=0.1, body=-4, seed=430)
-S(sfx.sticker_slap(seed=431), C['peishang'] + 1 / 12, -2, 0.25, hit=False)
-S(sfx.pen('marker', 0.3), C['peishang'] + 3 / 12, -10, 0.0, hit=False)
+S(sfx.paper('slide', 0.6, seed=399), C['flip'][0] + 0.05, -6, 0.4, hit=False)          # the corner peels up
+s = sfx.whoosh(0.6, 'cloth', direction=-1, peak=0.6, seed=400)
+S(s, C['flip'][0] + 0.38, -3, -0.2, hit=False)
+S(sfx.paper('flip', 0.35, seed=401), C['flip'][1], 0, -0.1)
+S(sfx.impact('soft', seed=402), C['flip'][1], -6, 0.0, hit=False)
+paper_slap(C['end_line1'], gain=1, pan=-0.1, body=-5, seed=410)
+paper_slap(C['end_line2'], gain=1, pan=-0.2, body=-5, seed=411)
+paper_slap(C['peishang'], gain=3, pan=0.15, body=-4, seed=430)
+S(sfx.stamp('rubber', seed=431), C['peishang'], 0, 0.15, hit=False)
+S(sfx.sticker_slap(seed=432), C['peishang'] + 1 / 12, -2, 0.3, hit=False)
+S(sfx.pen('marker', 0.3), C['peishang'] + 2 / 12, -10, 0.0, hit=False)
 S(sfx.click('soft'), C['peishang'] + 4 / 12, -8, 0.4, hit=False)
-S(sfx.impact('soft', seed=440), C['lockup'], -5, 0.0)
+S(sfx.impact('soft', seed=440), C['lockup'], -4, 0.0)
 S(sfx.tape_rip(0.1, seed=441), C['lockup'] + 1 / 12, -12, -0.4, hit=False)
-S(sfx.typing(n_keys=20, rate=24, kind='typewriter', seed=450), C['small_line'], -11, 0.0, hit=False)
+S(sfx.sticker_slap(seed=450), C['small_line'], -6, 0.0)
 bell = m.track('bell', level=-27, sends={'plate': -9}, group='sfx')
 chord = sorted(f.chord_at(END))
 for j, n in enumerate(chord[-3:]):
