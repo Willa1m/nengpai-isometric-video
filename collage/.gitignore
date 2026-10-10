@@ -1,0 +1,7 @@
+ref/
+lib/
+node_modules/
+film/out/
+work/
+*.wav
+client/assets_crop/17_company-equity-docs.jpg
