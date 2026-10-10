@@ -97,7 +97,7 @@ S(sfx.boing(pitch=1.2, dur=0.45), C['craft'][1] + 1 / 12, -9, 0.25, hit=False)
 # constructivist band tears in, phrases slam, avalanche of thumbnails, 上千件 chips, 有货
 S(sfx.tape_rip(0.32, seed=90), C['band'], 0, -0.2)
 for i, t in enumerate(C['phrases']):
-    S(sfx.text_hit('slam', seed=91 + i), t, -1, [-0.3, 0.0, 0.3][i])
+    S(sfx.text_hit('slam', seed=91 + i), t, 1, [-0.3, 0.0, 0.3][i])
 S(sfx.paper('rustle', 0.5, seed=95), C['thumbs'][0], -5, 0.4)
 for k in range(6):
     S(sfx.sticker_slap(seed=96 + k), C['thumbs'][0] + k / 12, -12 + k * 0.5, 0.6 - k * 0.2, hit=False)
@@ -138,7 +138,7 @@ S(drums.crash(0.9).loud(-18), C['burst'], -1, 0.0, hit=False)
 S(sfx.impact('punch', seed=210), C['burst'], 0, 0.0, hit=False)
 S(sfx.sub_drop(0.8), C['burst'], -6, 0.0, hit=False)
 for i, t in enumerate(C['mini_stamps']):
-    S(sfx.stamp('rubber', seed=220 + i), t, -4 + i * 0.5, [-0.3, 0.5, 0.6, 0.7][i])
+    S(sfx.stamp('rubber', seed=220 + i), t, -1 + i * 0.5, [-0.3, 0.5, 0.6, 0.7][i])
 # the big-headed buyer talks: muted-horn blips on the jaw flaps (the puppet's voice)
 horn = m.track('horn', level=-26, sends={'plate': -12}, lp=2400, group='sfx')
 for t, n in zip(C['jaw'], ['C5', 'E5', 'D5', 'G4']):
@@ -156,14 +156,14 @@ s = sfx.whoosh(0.4, 'swish', direction=-1, peak=0.7, seed=233)
 S(s, 12.3, -10, -0.3, hit=False)
 
 # ------------------------------------------------------------------ TWO ENGINES
-S(sfx.tape_rip(0.55, seed=300), C['rip'], 3, 0.0)
+S(sfx.tape_rip(0.4, seed=300), C['rip'], 3, 0.0)
 S(sfx.paper('crumple', 0.35, seed=301), C['rip'] + 0.05, -6, 0.0, hit=False)
 s = sfx.whoosh(0.45, 'air', direction=-1, peak=0.5, seed=302)
 S(s, C['rip'] + 0.2, -7, -0.6, hit=False)
 s = sfx.whoosh(0.45, 'air', direction=1, peak=0.5, seed=303)
 S(s, C['rip'] + 0.22, -7, 0.6, hit=False)
 hand_in(C['map'], pan=-0.5, seed=304)
-paper_slap(C['map'], gain=1, pan=-0.45, body=-5, seed=305)
+paper_slap(C['map'], gain=3, pan=-0.45, body=-4, seed=305)
 p0, p1 = C['map_pins']
 for i in range(16):
     tt = round((p0 + (p1 - p0) * i / 15) * 12) / 12

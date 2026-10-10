@@ -788,7 +788,7 @@ function drawMatching(t) {
         const tg = targets[(bi * 3 + m * 5) % targets.length];
         const src = [b.x + (hash(bi, m) - 0.5) * 20, b.y - 34 * b.s / 0.38];
         const tS = C.burst + (k % 4) / 12;
-        drawString(src, tg, tS, tS + 2 / 12, t, { w: 2.4, amp: 9, sag: 0.03, color: k % 5 === 0 ? '#e07800' : '#0587c4' });
+        drawString(src, tg, tS, tS + 2 / 12, t, { w: 3.0, amp: 9, sag: 0.03, color: k % 5 === 0 ? '#e07800' : '#0587c4' });
         k++;
       }
     });
@@ -821,6 +821,23 @@ function drawCrowd(t) {
   const dT = C.crowd - 1 / 12;
   const dk = Math.round((t - dT) * 12);
   const ds = dk <= 0 ? 0.88 : dk === 1 ? 1.05 : 1;
+  // HERO: constructivist cut-paper sunburst slapped in behind the crowd on the burst, turning on the 12 fps grid
+  if (t >= C.burst - 1 / 12) {
+    const k = Math.round((t - C.burst) * 12);
+    const sc = k < 0 ? 0.55 : k === 0 ? 1.12 : k === 1 ? 0.97 : 1;
+    const turn = Math.max(0, k) * 0.6 * D2R;
+    ctx.save();
+    ctx.translate(CROWD_C[0], CROWD_C[1] + 30); ctx.rotate(turn); ctx.scale(sc, sc);
+    for (let i = 0; i < 14; i++) {
+      const a0 = i / 14 * Math.PI * 2, w = 0.085 + hash(i, 71) * 0.04;
+      const r0 = 200, r1 = 470 + hash(i, 72) * 120;
+      ctx.fillStyle = 'rgba(20,12,4,0.28)';
+      ctx.beginPath(); ctx.moveTo(Math.cos(a0 - w) * r0 + 8, Math.sin(a0 - w) * r0 + 12); ctx.lineTo(Math.cos(a0) * r1 + 8, Math.sin(a0) * r1 + 12); ctx.lineTo(Math.cos(a0 + w) * r0 + 8, Math.sin(a0 + w) * r0 + 12); ctx.fill();
+      ctx.fillStyle = i % 2 ? BLUE : '#f2ede2';
+      ctx.beginPath(); ctx.moveTo(Math.cos(a0 - w) * r0, Math.sin(a0 - w) * r0); ctx.lineTo(Math.cos(a0) * r1, Math.sin(a0) * r1); ctx.lineTo(Math.cos(a0 + w) * r0, Math.sin(a0 + w) * r0); ctx.fill();
+    }
+    ctx.restore();
+  }
   drawPiece('disc_orange', CROWD_C[0], CROWD_C[1] + 30, 0, 1.25 * ds, dk <= 0 ? 0.4 : 0);
   BUSTS.forEach((b, i) => {
     const st = slap(b.T, t, [0, -260], 2);
@@ -864,7 +881,7 @@ function drawPuppet(t) {
     ctx.drawImage(im, ox, oy);
     // paddle arm in front: shoulder + elbow joints (puppet rotation), the paddle goes up on the burst
     ctx.save();
-    ctx.translate(ox + 440 + 21, oy + 745 + 21);
+    ctx.translate(ox + L.shoulder[0], oy + L.shoulder[1]);
     ctx.rotate(sh * D2R);
     const au = IMG.pup_arm_u, LU = LAY.pup_arm_u;
     ctx.drawImage(au, -LU.joint[0], -LU.joint[1]);
@@ -922,6 +939,12 @@ const CARDS = [
 ];
 function drawEngines(t) {
   ctx.drawImage(IMG.page_news, -140, -80);
+  // background collage layer: newsprint scraps + constructivist blocks (already on the page under the rip)
+  drawPiece('news1', 120, 980, -8 * D2R, 0.9);
+  drawPiece('news2', 1840, 120, 6 * D2R, 0.85);
+  drawPiece('disc_orange', 1640, 860, 0, 0.95);
+  drawPiece('blk_black', 1460, 236, -4 * D2R, 0.62);
+  drawPiece('news0', 760, 930, 5 * D2R, 0.6);
   // a torn blue seam down the middle: the two engines
   drawPiece('blk_blue', 960, 540, 90 * D2R + 1.5 * D2R, 0.85, 0, 1);
   // LEFT: Shenzhen map slapped from the left, blue pins pop across it, a network grows between them
@@ -941,7 +964,9 @@ function drawEngines(t) {
       ctx.save();
       for (let i = 1; i < nP; i++) {
         const tp = lerp(p0, p1, i / (nP - 1));
-        const a = pins[order[i]], b = pins[order[(i * 7) % i]];
+        const a = pins[order[i]];
+        let b = pins[0], bd = 1e9;
+        for (let q = 0; q < i; q++) { const d = Math.hypot(pins[q][0] - a[0], pins[q][1] - a[1]); if (d < bd) { bd = d; b = pins[q]; } }
         drawString(b, a, Math.round(tp * 12) / 12, Math.round(tp * 12) / 12 + 1 / 12, t, { w: 2, amp: 5, sag: 0.02 });
       }
       ctx.restore();
@@ -965,7 +990,7 @@ function drawEngines(t) {
     ctx.restore();
   }
   // RIGHT: headline 全网自媒体矩阵 (ransom), paper phone cards dealt like playing cards
-  const head = [...'全网自媒体矩阵'].map((ch, i) => ({ ch, style: ['black', 'white', 'blue', 'white', 'news', 'orange', 'white'][i], size: 92,
+  const head = [...'全网自媒体矩阵'].map((ch, i) => ({ ch, style: ['white', 'news', 'blue', 'white', 'orange', 'white', 'news'][i], size: 92,
     x: 1100 + i * 106, y: 232 + (i % 2 ? 12 : -6), rot: (hash(i, 51) - 0.5) * 12, seed: 900 + i }));
   ransom(head, t, { t0: C.matrix, seed: 950 });
   CARDS.forEach((c, i) => drawCard(c, i, t));
